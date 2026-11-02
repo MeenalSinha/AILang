@@ -1,0 +1,21 @@
+// Research Assistant: an agent with a model, persistent memory, a tool,
+// and a permission, plus a prompt template rendered against a variable.
+model GPT5;
+tool Search;
+permission internet;
+
+agent Researcher {
+    model GPT5;
+    memory persistent;
+    tools [Search];
+    permissions [internet];
+}
+
+let topic = "the history of the printing press";
+prompt brief = "You are a careful researcher. Investigate: ${topic}";
+
+println(render("brief"));
+println(invoke_tool("Researcher", "Search", topic));
+
+remember("last_topic", topic);
+println("Remembered topic: " + recall("last_topic"));

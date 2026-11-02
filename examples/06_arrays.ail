@@ -1,0 +1,12 @@
+// Array literals, indexing, and mutation.
+let numbers = [1, 2, 3, 4, 5];
+println(len(numbers));
+
+let sum = 0;
+for i in 0..len(numbers) {
+    sum += numbers[i];
+}
+println(sum);
+
+numbers[0] = 100;
+println(numbers[0]);

@@ -1,0 +1,10 @@
+// Integration test: string ops and stdlib builtins.
+assert(len("hello") == 5);
+assert(type(5) == "int");
+assert(type(5.0) == "float");
+assert(type("x") == "string");
+assert(type(true) == "bool");
+assert("foo" + "bar" == "foobar");
+assert(parse_int("42") == 42);
+assert(parse_float("3.5") == 3.5);
+assert(to_string(42) == "42");

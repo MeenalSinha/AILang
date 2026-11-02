@@ -1,0 +1,14 @@
+[package]
+name = "ailang-repl"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Interactive read-eval-print loop for AILang."
+
+[dependencies]
+ailang-parser = { workspace = true }
+ailang-ast = { workspace = true }
+ailang-interpreter = { workspace = true }
+ailang-diagnostics = { workspace = true }
+anyhow = { workspace = true }

@@ -1,0 +1,19 @@
+// A tiny calculator over the four basic operators.
+fn calculate(a: int, b: int, op: string) -> int {
+    if op == "+" {
+        return a + b;
+    } else if op == "-" {
+        return a - b;
+    } else if op == "*" {
+        return a * b;
+    } else if op == "/" {
+        return a / b;
+    }
+    println("unknown operator: " + op);
+    return 0;
+}
+
+println(calculate(4, 5, "+"));
+println(calculate(10, 3, "-"));
+println(calculate(6, 7, "*"));
+println(calculate(20, 4, "/"));

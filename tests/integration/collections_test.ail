@@ -1,0 +1,17 @@
+// Integration test: arrays and maps, including mutation.
+let nums = [5, 3, 1, 4, 2];
+assert(len(nums) == 5);
+
+let total = 0;
+for i in 0..len(nums) {
+    total += nums[i];
+}
+assert(total == 15);
+
+nums[0] = 100;
+assert(nums[0] == 100);
+
+let m = {"a": 1, "b": 2};
+assert(m["a"] == 1);
+m["c"] = 3;
+assert(m["c"] == 3);

@@ -1,0 +1,17 @@
+[package]
+name = "ailang-interpreter"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Tree-walking interpreter and standard library builtins for AILang."
+
+[dependencies]
+ailang-ast = { workspace = true }
+ailang-runtime = { workspace = true }
+ailang-diagnostics = { workspace = true }
+ailang-ai-runtime = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+ailang-parser = { workspace = true }

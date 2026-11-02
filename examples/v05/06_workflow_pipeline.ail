@@ -1,0 +1,18 @@
+// Workflow Pipeline: a four-stage linear pipeline, each stage's mock
+// output visibly building on the last (since MockProvider echoes its
+// input), demonstrating that run_workflow really does pipe stage to stage.
+model GPT5;
+
+agent Extract { model GPT5; }
+agent Transform { model GPT5; }
+agent Validate { model GPT5; }
+agent Load { model GPT5; }
+
+workflow ETL {
+    Extract -> Transform -> Validate -> Load;
+}
+
+let results = run_workflow("ETL", "raw_customer_data.csv");
+for i in 0..len(results) {
+    println("[" + to_string(i) + "] " + results[i]["stage"] + " -> " + results[i]["output"]);
+}

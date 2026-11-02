@@ -1,0 +1,18 @@
+[package]
+name = "ailang-benches"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+publish = false
+description = "Lightweight std-based benchmarks for the AILang front-end and interpreter."
+
+[[bin]]
+name = "ailang-benches"
+path = "src/main.rs"
+
+[dependencies]
+ailang-lexer = { workspace = true }
+ailang-parser = { workspace = true }
+ailang-semantic = { workspace = true }
+ailang-interpreter = { workspace = true }

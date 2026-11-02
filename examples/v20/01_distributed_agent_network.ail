@@ -1,0 +1,30 @@
+// Distributed Agent Network: a `network` groups agents with real
+// dynamic membership and deterministic leader election. Real: the
+// membership list and leader computation. Simulated: everything still
+// runs in one process (see ai_runtime::network's doc for the honest
+// scope of "distributed" in this release).
+agent Planner on cloud {}
+agent Researcher on edge {}
+agent Engineer on local {}
+agent Reviewer {}
+
+network Enterprise {
+    agent Planner;
+    agent Researcher;
+    agent Engineer;
+    agent Reviewer;
+}
+
+println("Members: " + to_string(network_members("Enterprise")));
+println("Leader: " + network_leader("Enterprise"));
+
+let health = network_health("Enterprise");
+for i in 0..len(health) {
+    println(health[i]["member"] + " healthy: " + to_string(health[i]["healthy"]));
+}
+
+// Dynamic membership: a new hire joins, someone leaves.
+agent Intern {}
+network_join("Enterprise", "Intern");
+network_leave("Enterprise", "Reviewer");
+println("After join/leave: " + to_string(network_members("Enterprise")));

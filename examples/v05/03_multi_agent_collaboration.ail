@@ -1,0 +1,16 @@
+// Multi-Agent Collaboration: three agents pipelined through a workflow,
+// each stage's output feeding the next.
+model GPT5;
+
+agent Researcher { model GPT5; }
+agent Writer { model GPT5; }
+agent Reviewer { model GPT5; }
+
+workflow ResearchPaper {
+    Researcher -> Writer -> Reviewer;
+}
+
+let results = run_workflow("ResearchPaper", "the future of renewable energy");
+for i in 0..len(results) {
+    println(results[i]["stage"] + ": " + results[i]["output"]);
+}

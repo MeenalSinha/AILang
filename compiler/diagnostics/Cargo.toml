@@ -1,0 +1,12 @@
+[package]
+name = "ailang-diagnostics"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Shared diagnostic, span, and error-reporting types for the AILang compiler."
+
+[dependencies]
+ariadne = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }

@@ -1,0 +1,4 @@
+[0] Extract -> [mock-model output for: raw_customer_data.csv]
+[1] Transform -> [mock-model output for: [mock-model output for: raw_customer_data.csv]]
+[2] Validate -> [mock-model output for: [mock-model output for: [mock-model output for: raw_customer_data.csv]]]
+[3] Load -> [mock-model output for: [mock-model output for: [mock-model output for: [mock-model output for: raw_cust...]

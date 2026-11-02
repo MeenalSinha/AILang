@@ -1,0 +1,26 @@
+// Multi-Agent Software Team: a team of agents coordinating through real
+// in-process messaging (send_message/receive_message/broadcast) rather
+// than a workflow pipeline — demonstrating v1.0's "native agent messaging"
+// foundation (see ai_runtime::messaging's doc for why this is explicit
+// function calls rather than `A -> B` syntax).
+agent TechLead on local {}
+agent Backend on cloud {}
+agent Frontend on edge {}
+
+println("Tech lead broadcasts the sprint goal:");
+broadcast("TechLead", "Sprint goal: ship the login flow by Friday");
+
+let backend_msg = receive_message("Backend");
+println("Backend received: " + backend_msg["text"] + " (from " + backend_msg["from"] + ")");
+
+let frontend_msg = receive_message("Frontend");
+println("Frontend received: " + frontend_msg["text"]);
+
+send_message("Backend", "TechLead", "API contract drafted, review please");
+let reply = receive_message("TechLead");
+println("Tech lead received: " + reply["text"] + " (from " + reply["from"] + ")");
+
+println("Agent locations (v1.0 distributed-execution metadata):");
+println("  TechLead -> " + agent_location("TechLead"));
+println("  Backend  -> " + agent_location("Backend"));
+println("  Frontend -> " + agent_location("Frontend"));

@@ -1,0 +1,15 @@
+// Parallel Tasks: independent statements inside `parallel { }`. v0.5 runs
+// them sequentially (see docs/roadmap.md), but every task still runs even
+// if an earlier one fails — unlike a normal `{ }` block.
+fn slow_task(name: string) -> void {
+    println("starting " + name);
+    println("finished " + name);
+}
+
+parallel {
+    slow_task("fetch_weather");
+    slow_task("fetch_news");
+    slow_task("fetch_stocks");
+}
+
+println("all tasks dispatched");

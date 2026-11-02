@@ -1,0 +1,29 @@
+// Security and Observability: real secret access (env-var only, never
+// from source), a real permission-denied audit trail, and a real
+// execution timeline — the v1.0 "Security Framework" and "Observability"
+// foundations (see ai_runtime::security and ai_runtime::trace for exact
+// scope: this is not a full policy engine or distributed tracing system).
+tool Filesystem;
+permission filesystem;
+
+agent Trusted { tools [Filesystem]; permissions [filesystem]; }
+agent Sandboxed { tools [Filesystem]; }
+
+// secret() is the ONLY way to read environment variables in AILang.
+let api_key = secret("DEMO_API_KEY");
+println("api key present: " + to_string(api_key != null));
+
+println("Trusted agent reading a file (permission granted):");
+println(invoke_tool("Trusted", "Filesystem", "/etc/hostname"));
+
+println("Audit log after that call:");
+let log = audit_log();
+for i in 0..len(log) {
+    println("  agent=" + log[i]["agent"] + " tool=" + log[i]["tool"] + " granted=" + to_string(log[i]["granted"]));
+}
+
+println("Execution trace so far:");
+let trace = get_trace();
+for i in 0..len(trace) {
+    println("  [" + trace[i]["kind"] + "] " + trace[i]["label"]);
+}

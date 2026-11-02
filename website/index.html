@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AILang — an agentic-systems programming language</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #12151d;
+    --text: #e6e8ee;
+    --muted: #8b93a7;
+    --accent: #7dd3fc;
+    --accent2: #a78bfa;
+    --code-bg: #171a23;
+    --border: #232735;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    padding: 5rem 1.5rem 3rem;
+    text-align: center;
+    background: radial-gradient(ellipse at top, rgba(125,211,252,0.12), transparent 60%);
+  }
+  header h1 {
+    font-size: 3rem;
+    margin: 0 0 0.5rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  header p { color: var(--muted); font-size: 1.25rem; max-width: 640px; margin: 0 auto; }
+  .badge {
+    display: inline-block;
+    margin-top: 1.25rem;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+  section { margin-bottom: 3rem; }
+  h2 { color: var(--accent); font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+  }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .card h3 { margin-top: 0; color: var(--text); font-size: 1.05rem; }
+  .card p { color: var(--muted); margin-bottom: 0; font-size: 0.92rem; }
+  footer { text-align: center; color: var(--muted); padding: 2rem 0; font-size: 0.85rem; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>AILang</h1>
+  <p>An agentic-systems programming language where AI is a first-class
+     construct instead of a library.</p>
+  <span class="badge">v0.1 — foundation release, no AI constructs yet</span>
+</header>
+
+<main>
+  <section>
+    <h2>Today</h2>
+    <p>v0.1 ships a complete, ordinary programming language: lexer,
+    parser, semantic analysis, static type checking, a tree-walk
+    interpreter, a CLI, a REPL, a formatter, and foundations for a package
+    manager and a language server. No <code>agent</code>/<code>model</code>/<code>workflow</code>
+    constructs exist yet — see the roadmap below for why that's
+    intentional.</p>
+    <pre><code>fn fib(n: int) -> int {
+    if n &lt; 2 { return n; }
+    return fib(n - 1) + fib(n - 2);
+}
+
+for i in 0..10 {
+    println(fib(i));
+}</code></pre>
+  </section>
+
+  <section>
+    <h2>Tomorrow</h2>
+    <pre><code>agent Researcher {
+    model GPT5
+    memory persistent
+    tools [search, browser]
+}
+
+workflow Paper {
+    Researcher -> Writer -> Reviewer
+}</code></pre>
+    <p>Every phase of the v0.1 compiler was built so that adding
+    <code>agent</code>, <code>model</code>, <code>workflow</code>, <code>tool</code>,
+    <code>memory</code>, and the rest of the reserved AI-native keywords is a
+    matter of adding new AST variants and interpreter dispatch arms — not a
+    rewrite. See <a href="../docs/roadmap.md">docs/roadmap.md</a>.</p>
+  </section>
+
+  <section>
+    <h2>The toolchain</h2>
+    <div class="grid">
+      <div class="card"><h3>ail</h3><p>run / build / check / fmt / repl / test / init / new</p></div>
+      <div class="card"><h3>ail repl</h3><p>Persistent-session interactive shell</p></div>
+      <div class="card"><h3>ail-lsp</h3><p>Diagnostics + hover over stdio JSON-RPC</p></div>
+      <div class="card"><h3>ail fmt</h3><p>Canonical, idempotent source formatting</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Get started</h2>
+    <pre><code>cargo build --release
+./target/release/ail new my_project
+cd my_project
+ail run src/main.ail</code></pre>
+    <p>See <a href="../docs/getting-started.md">docs/getting-started.md</a> for the full guide.</p>
+  </section>
+</main>
+
+<footer>AILang v0.1 &middot; MIT License &middot; <a href="https://github.com/ailang-dev/ailang">github.com/ailang-dev/ailang</a></footer>
+</body>
+</html>

@@ -1,0 +1,9 @@
+Compressed: The quarterly results show strong growth...
+Deduped: ["revenue grew 20%", "costs stayed flat"]
+Search (all quarters):
+  q1-summary (score 0.9128709291752771)
+  q1 (score 0.5477225575051663)
+  q2 (score 0.19245008972987526)
+Search (Q1 only, metadata filter):
+  q1-summary
+  q1

@@ -1,0 +1,12 @@
+[package]
+name = "ailang-ai-runtime"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "AI Runtime Foundation: model providers, memory stores, tool registry, permission enforcement, and workflow/team execution for AILang v0.5."
+
+[dependencies]
+ailang-ast = { workspace = true }
+ailang-runtime = { workspace = true }
+ailang-parser = { workspace = true }

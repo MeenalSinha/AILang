@@ -1,0 +1,21 @@
+[package]
+name = "ailang-lsp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Language Server Protocol foundation for AILang (diagnostics, hover, go-to-def scaffolding)."
+
+[[bin]]
+name = "ail-lsp"
+path = "src/main.rs"
+
+[dependencies]
+ailang-parser = { workspace = true }
+ailang-ast = { workspace = true }
+ailang-semantic = { workspace = true }
+ailang-types = { workspace = true }
+ailang-diagnostics = { workspace = true }
+ailang-fmt = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

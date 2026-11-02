@@ -1,0 +1,8 @@
+Tech lead broadcasts the sprint goal:
+Backend received: Sprint goal: ship the login flow by Friday (from TechLead)
+Frontend received: Sprint goal: ship the login flow by Friday
+Tech lead received: API contract drafted, review please (from Backend)
+Agent locations (v1.0 distributed-execution metadata):
+  TechLead -> local
+  Backend  -> cloud
+  Frontend -> edge

@@ -1,0 +1,23 @@
+// Structured Output with Schemas: `generate SchemaName` returns a
+// well-typed value with every field present, so calling code can rely on
+// its shape even before a real model provider is wired in (see
+// ailang_ai_runtime::MockProvider's doc comment).
+schema Person {
+    name: string;
+    age: int;
+    is_member: bool;
+}
+
+schema Address {
+    street: string;
+    city: string;
+}
+
+let p = generate Person;
+let a = generate Address;
+
+println(type(p));
+println(p["name"] == "");
+println(p["age"] == 0);
+println(p["is_member"] == false);
+println(a["city"] == "");

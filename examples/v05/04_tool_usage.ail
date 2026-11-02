@@ -1,0 +1,21 @@
+// Tool Usage: built-in tools (Calculator needs no permission; Filesystem
+// needs `filesystem`) plus a custom tool implemented as a plain AILang
+// function sharing the tool's name.
+tool Calculator;
+tool Filesystem;
+tool Doubler;
+permission filesystem;
+
+agent Analyst {
+    tools [Calculator, Filesystem, Doubler];
+    permissions [filesystem];
+}
+
+fn Doubler(x: int) -> int {
+    return x * 2;
+}
+
+println(invoke_tool("Analyst", "Calculator", "(12 + 8) / 4"));
+println(invoke_tool("Analyst", "Doubler", 21));
+// Filesystem requires the `filesystem` permission, which Analyst has:
+// println(invoke_tool("Analyst", "Filesystem", "/etc/hostname"));

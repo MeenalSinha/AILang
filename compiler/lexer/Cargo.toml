@@ -1,0 +1,12 @@
+[package]
+name = "ailang-lexer"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Tokenizer for the AILang programming language, built on logos."
+
+[dependencies]
+ailang-diagnostics = { workspace = true }
+logos = { workspace = true }
+serde = { workspace = true }

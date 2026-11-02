@@ -1,0 +1,14 @@
+[package]
+name = "ailang-semantic"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Scope, symbol, and name-resolution analysis for AILang."
+
+[dependencies]
+ailang-ast = { workspace = true }
+ailang-diagnostics = { workspace = true }
+
+[dev-dependencies]
+ailang-parser = { workspace = true }

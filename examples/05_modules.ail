@@ -1,0 +1,15 @@
+// `module` groups related functions into a namespace. v0.1 hoists module
+// members into the enclosing scope (see docs/roadmap.md for qualified
+// `math.square` access, landing alongside real module resolution).
+module math {
+    fn square(x: int) -> int {
+        return x * x;
+    }
+
+    fn cube(x: int) -> int {
+        return x * x * x;
+    }
+}
+
+println(square(5));
+println(cube(3));

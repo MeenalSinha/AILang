@@ -1,0 +1,23 @@
+// Integration test: recursion, mutual recursion, closures over globals.
+fn factorial(n: int) -> int {
+    if n <= 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+assert(factorial(6) == 720);
+
+fn is_even(n: int) -> bool {
+    if n == 0 {
+        return true;
+    }
+    return is_odd(n - 1);
+}
+fn is_odd(n: int) -> bool {
+    if n == 0 {
+        return false;
+    }
+    return is_even(n - 1);
+}
+assert(is_even(10));
+assert(is_odd(7));

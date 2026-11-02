@@ -1,0 +1,50 @@
+// Integration test: v1.0 features working together (messaging, security,
+// stdlib expansion, semver-adjacent stdlib helpers).
+agent A on cloud {}
+agent B on edge {}
+assert(agent_location("A") == "cloud");
+assert(agent_location("B") == "edge");
+
+send_message("A", "B", "hello");
+let msg = receive_message("B");
+assert(msg["from"] == "A");
+assert(msg["text"] == "hello");
+
+broadcast("A", "ping");
+assert(receive_message("B")["text"] == "ping");
+
+assert(secret("AILANG_INTEGRATION_TEST_DOES_NOT_EXIST") == null);
+
+tool Calculator;
+agent Analyst { tools [Calculator]; }
+invoke_tool("Analyst", "Calculator", "2 + 2");
+let log = audit_log();
+assert(len(log) == 1);
+assert(log[0]["granted"] == true);
+
+let trace = get_trace();
+assert(len(trace) == 1);
+assert(trace[0]["kind"] == "tool_invocation");
+
+let arr = [3, 1, 2];
+sort(arr);
+assert(arr[0] == 1 && arr[1] == 2 && arr[2] == 3);
+push(arr, 4);
+assert(len(arr) == 4);
+assert(pop(arr) == 4);
+
+let encoded = json_encode({"x": 1});
+let decoded = json_decode(encoded);
+assert(decoded["x"] == 1);
+
+assert(hash("abc") == hash("abc"));
+
+memory M persistent;
+remember_in("M", "k", "v1");
+remember_in("M", "k", "v2");
+assert(recall_in("M", "k") == "v2");
+let history = memory_history("k");
+assert(len(history) == 0); // memory_history is the global store, not M
+remember("k", "global_v1");
+remember("k", "global_v2");
+assert(len(memory_history("k")) == 2);

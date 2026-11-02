@@ -1,0 +1,7 @@
+Members: ["Planner", "Researcher", "Engineer", "Reviewer"]
+Leader: Engineer
+Planner healthy: true
+Researcher healthy: true
+Engineer healthy: true
+Reviewer healthy: true
+After join/leave: ["Planner", "Researcher", "Engineer", "Intern"]

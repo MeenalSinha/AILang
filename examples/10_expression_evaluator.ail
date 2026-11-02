@@ -1,0 +1,36 @@
+// A mini postfix ("RPN") expression evaluator, built entirely from
+// arrays, strings, and integers already in the v0.1 language — no special
+// evaluator syntax needed.
+//
+// Evaluates: 3 4 + 2 * = (3 + 4) * 2 = 14
+fn eval_postfix(toks: [string]) -> int {
+    let values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let top = -1;
+    for i in 0..len(toks) {
+        let tok = toks[i];
+        if tok == "+" || tok == "-" || tok == "*" || tok == "/" {
+            let b = values[top];
+            top -= 1;
+            let a = values[top];
+            let result = 0;
+            if tok == "+" {
+                result = a + b;
+            } else if tok == "-" {
+                result = a - b;
+            } else if tok == "*" {
+                result = a * b;
+            } else {
+                result = a / b;
+            }
+            top += 1;
+            values[top] = result;
+        } else {
+            top += 1;
+            values[top] = parse_int(tok);
+        }
+    }
+    return values[top];
+}
+
+let tokens = ["3", "4", "+", "2", "*"];
+println(eval_postfix(tokens));

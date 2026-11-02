@@ -1,0 +1,7 @@
+// Map literals and lookups.
+let ages = {"Alice": 20, "Bob": 25};
+println(ages["Alice"]);
+println(ages["Bob"]);
+
+ages["Charlie"] = 30;
+println(ages["Charlie"]);

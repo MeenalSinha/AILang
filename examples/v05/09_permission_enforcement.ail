@@ -1,0 +1,22 @@
+// Permission Enforcement: an agent without the `filesystem` permission is
+// blocked from a Filesystem tool call, even though the tool is declared
+// in its `tools` list. Remove the comment on the second agent's
+// permissions to see it succeed instead.
+tool Filesystem;
+permission filesystem;
+
+agent Sandboxed {
+    tools [Filesystem];
+    // no permissions granted
+}
+
+agent Trusted {
+    tools [Filesystem];
+    permissions [filesystem];
+}
+
+println("Trusted agent (has permission):");
+println(invoke_tool("Trusted", "Filesystem", "/etc/hostname"));
+
+println("Sandboxed agent (missing permission) will raise a runtime error:");
+println(invoke_tool("Sandboxed", "Filesystem", "/etc/hostname"));

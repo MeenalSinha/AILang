@@ -1,0 +1,9 @@
+Cluster has 4 replicas, autoscaling=true
+job 0 -> replica 0
+job 1 -> replica 1
+job 2 -> replica 2
+job 3 -> replica 3
+job 4 -> replica 0
+job 5 -> replica 1
+job 6 -> replica 2
+job 7 -> replica 3

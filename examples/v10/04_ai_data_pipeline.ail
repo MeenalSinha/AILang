@@ -1,0 +1,26 @@
+// AI Data Pipeline: JSON in, structured processing, JSON out — combining
+// v1.0's stdlib expansion (json_encode/json_decode, sort) with the
+// existing v0.5 classify() to build a small real ETL-style pipeline.
+//
+// Note: classify() scores by keyword overlap between the text and each
+// category *phrase* (see ai_runtime::classify's doc), so richer category
+// phrases classify better than single bare words.
+let raw = "[{\"name\":\"Ada\",\"note\":\"loves rust and systems programming\"},{\"name\":\"Grace\",\"note\":\"baking bread this weekend\"}]";
+let records = json_decode(raw);
+
+let categories = ["technology programming rust systems", "cooking baking bread recipes"];
+let processed = [];
+for i in 0..len(records) {
+    let record = records[i];
+    let category = classify(record["note"], categories);
+    push(processed, {"name": record["name"], "category": category});
+}
+
+println(json_encode(processed));
+
+let names = [];
+for i in 0..len(processed) {
+    push(names, processed[i]["name"]);
+}
+sort(names);
+println(names);

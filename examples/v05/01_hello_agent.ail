@@ -1,0 +1,15 @@
+// Hello Agent: the smallest possible AI-native program. Declares a model,
+// a single-field agent, and greets by calling into it via run_workflow's
+// single-stage form.
+model GPT5;
+
+agent Greeter {
+    model GPT5;
+}
+
+workflow Greeting {
+    Greeter;
+}
+
+let results = run_workflow("Greeting", "Say hello to the world");
+println(results[0]["output"]);

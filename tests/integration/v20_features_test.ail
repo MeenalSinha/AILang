@@ -1,0 +1,53 @@
+// Integration test: v2.0 distributed-intelligence features working together.
+agent Planner {} agent Researcher {}
+network Enterprise { agent Planner; agent Researcher; }
+assert(len(network_members("Enterprise")) == 2);
+assert(network_leader("Enterprise") == "Planner");
+
+network_join("Enterprise", "Researcher");
+assert(len(network_members("Enterprise")) == 2); // already present, no dup
+
+cluster Workers { replicas 3; autoscaling enabled; }
+let status = cluster_status("Workers");
+assert(status["replicas"] == 3);
+assert(status["autoscaling"] == true);
+
+let d1 = cluster_dispatch("Workers", "Planner", "task");
+let d2 = cluster_dispatch("Workers", "Planner", "task");
+let d3 = cluster_dispatch("Workers", "Planner", "task");
+let d4 = cluster_dispatch("Workers", "Planner", "task");
+assert(d1["replica"] == 0 && d2["replica"] == 1 && d3["replica"] == 2 && d4["replica"] == 0);
+
+let handled = false;
+on my_event {
+    handled = true;
+}
+emit("my_event", null);
+assert(handled == true);
+
+subscribe("topic1", "Planner");
+publish("topic1", "hi");
+assert(receive_message("Planner")["text"] == "hi");
+
+fn responder(x: string) -> string { return "echo: " + x; }
+on_request("Researcher", "responder");
+assert(request("Planner", "Researcher", "test") == "echo: test");
+
+vector_index_add("VI", "a", "machine learning and neural networks", {});
+vector_index_add("VI", "b", "gardening tips for spring", {});
+let results = vector_index_search("VI", "deep learning neural networks", 1, {});
+assert(results[0]["id"] == "a");
+
+assert(compress_context("one two three four five", 2) == "one two...");
+assert(len(dedupe_chunks(["x", "x", "y"])) == 2);
+
+fn taskA() -> int { return 1; }
+fn taskB() -> int { return 2; }
+schedule("taskB", 1);
+schedule("taskA", 5);
+let sched_results = run_scheduled();
+assert(sched_results[0] == 1 && sched_results[1] == 2);
+
+model M1; model M2;
+agent MultiModel { models [M1, M2]; }
+assert(len(agent_models("MultiModel")) == 2);

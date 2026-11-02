@@ -1,0 +1,23 @@
+// Local Model Integration: a `model` declared with an `endpoint` is
+// backed by a REAL std::net HTTP client (see
+// ailang_ai_runtime::HttpModelProvider) instead of the default
+// MockProvider — talking to a local model server such as Ollama's
+// OpenAI-compatible-ish HTTP API. This example expects a server at
+// localhost:11434; if none is running, invoking the model raises a clear
+// connection-refused runtime error rather than hanging or silently
+// falling back.
+model LocalModel {
+    endpoint "http://localhost:11434/api/generate";
+}
+
+agent LocalAgent {
+    model LocalModel;
+}
+
+workflow AskLocal {
+    LocalAgent;
+}
+
+println("Attempting to reach the local model server...");
+let results = run_workflow("AskLocal", "Say hello in one short sentence.");
+println(results[0]["output"]);

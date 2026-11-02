@@ -1,0 +1,18 @@
+name = "ailang"
+version = "0.1.0"
+edition = "2026"
+authors = ["AILang Team"]
+description = "An agentic-systems programming language where AI is a first-class construct instead of a library."
+license = "MIT"
+repository = "https://github.com/ailang-dev/ailang"
+
+[dependencies]
+# v0.1 ships no external AILang-level packages. Local path dependencies are
+# supported by `ailang-pm` (see package_manager/); a public registry is a
+# v0.5+ roadmap item, see docs/roadmap.md.
+
+[workspace]
+# The actual Rust implementation is a Cargo workspace rooted at this same
+# directory — see Cargo.toml. This ai.toml describes the AILang *language
+# project* as a package in its own right (metadata a future `ail` registry
+# client would read), separately from the Rust build graph that implements it.

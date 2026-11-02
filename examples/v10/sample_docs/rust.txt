@@ -1,0 +1,4 @@
+Rust is a systems programming language that guarantees memory safety
+without a garbage collector. Its borrow checker enforces ownership rules
+at compile time, preventing data races and use-after-free bugs before the
+program ever runs.

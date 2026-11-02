@@ -1,0 +1,12 @@
+[package]
+name = "ailang-parser"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Recursive-descent parser producing the AILang AST."
+
+[dependencies]
+ailang-diagnostics = { workspace = true }
+ailang-lexer = { workspace = true }
+ailang-ast = { workspace = true }

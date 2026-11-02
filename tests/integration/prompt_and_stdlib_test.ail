@@ -1,0 +1,8 @@
+// Integration test: prompt rendering and the pure v0.5 stdlib functions.
+let name = "Ada";
+prompt greeting = "Hello, ${name}!";
+assert(render("greeting") == "Hello, Ada!");
+
+assert(classify("I enjoy playing football", ["sports", "cooking"]) == "sports");
+assert(len(embed("test string")) == 8);
+assert(summarize("First sentence here. Second sentence.") == "First sentence here.");

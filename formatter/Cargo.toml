@@ -1,0 +1,13 @@
+[package]
+name = "ailang-fmt"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "A rustfmt-style source formatter for AILang."
+
+[dependencies]
+ailang-ast = { workspace = true }
+
+[dev-dependencies]
+ailang-parser = { workspace = true }

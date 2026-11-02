@@ -1,0 +1,19 @@
+// Agent Clusters: a `cluster` spec plus real round-robin task dispatch
+// across its replica slots. Real: the round-robin scheduling and the
+// actual model invocation per dispatch. Simulated: "replica N" is a
+// rotation label, not a second OS process/container — see
+// ai_runtime::network / ailang-interpreter's module docs.
+agent Worker {}
+
+cluster AIWorkers {
+    replicas 4;
+    autoscaling enabled;
+}
+
+let status = cluster_status("AIWorkers");
+println("Cluster has " + to_string(status["replicas"]) + " replicas, autoscaling=" + to_string(status["autoscaling"]));
+
+for i in 0..8 {
+    let result = cluster_dispatch("AIWorkers", "Worker", "job " + to_string(i));
+    println("job " + to_string(i) + " -> replica " + to_string(result["replica"]));
+}

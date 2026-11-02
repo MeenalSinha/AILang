@@ -1,0 +1,27 @@
+// Event System + Agent-to-Agent Communication: real event handlers,
+// real pub/sub, and real request/response RPC — all genuinely working,
+// single-process message passing (see CHANGELOG.md for why explicit
+// function calls replace the illustrative `A -> B` syntax).
+agent Uploader {} agent Indexer {} agent Notifier {}
+
+on document_uploaded {
+    println("[Indexer] indexing: " + payload);
+}
+on document_uploaded {
+    println("[Notifier] notifying team about: " + payload);
+}
+
+let handler_count = emit("document_uploaded", "quarterly_report.pdf");
+println("ran " + to_string(handler_count) + " handler(s)");
+
+subscribe("uploads", "Indexer");
+subscribe("uploads", "Notifier");
+publish("uploads", "new file: roadmap.md");
+println("Indexer inbox: " + receive_message("Indexer")["text"]);
+println("Notifier inbox: " + receive_message("Notifier")["text"]);
+
+fn summarize_doc(name: string) -> string {
+    return "Summary of " + name + ": (placeholder summary)";
+}
+on_request("Indexer", "summarize_doc");
+println(request("Uploader", "Indexer", "roadmap.md"));

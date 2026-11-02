@@ -1,0 +1,20 @@
+// Knowledge Retrieval System: real RAG using ailang_ai_runtime's file
+// ingestion + feature-hashing-embedding + cosine-similarity ranking (see
+// ai_runtime::knowledge's doc for exactly what's real here).
+//
+// This example expects a "docs" folder of .txt/.md files next to wherever
+// you run it from; point `source` at any directory of text files to try
+// it on your own docs.
+knowledge Docs {
+    source "./examples/v10/sample_docs";
+}
+
+let query = "how does the borrow checker prevent memory bugs";
+let results = retrieve("Docs", query, 2);
+
+println("Query: " + query);
+println("Top " + to_string(len(results)) + " result(s):");
+for i in 0..len(results) {
+    println("  [" + to_string(i + 1) + "] " + results[i]["source"] + " (score " + to_string(results[i]["score"]) + ")");
+    println("      " + results[i]["text"]);
+}

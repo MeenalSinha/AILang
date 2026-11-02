@@ -1,0 +1,25 @@
+// Memory Demonstration: remember/recall/forget, including substring recall
+// and its "most recently remembered match wins" tie-breaking rule.
+remember("favorite_drink", "coffee");
+remember("editor_choice", "AILang, obviously");
+
+println(recall("favorite_drink"));  // exact key match -> "coffee"
+println(recall("editor"));          // substring match against the key -> "AILang, obviously"
+println(recall("obviously"));       // substring match against the value -> "AILang, obviously"
+
+forget("favorite_drink");
+println(recall("favorite_drink"));  // null: forgotten
+
+// Two entries sharing a substring: recall returns whichever was
+// remembered most recently.
+remember("first_note", "remember the milk");
+remember("second_note", "remember the eggs");
+println(recall("remember the")); // matches "second_note" (more recent)
+
+memory UserMemory persistent;
+memory SessionMemory temporary;
+agent Assistant {
+    memory UserMemory;
+}
+println(type(UserMemory));
+println(type(Assistant));

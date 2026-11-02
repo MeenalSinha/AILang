@@ -1,0 +1,19 @@
+// Integration test: team fan-out and parallel execution independence.
+agent A {}
+agent B {}
+team Duo {
+    A;
+    B;
+}
+let results = run_team("Duo", "shared input");
+assert(len(results) == 2);
+assert(results[0]["member"] == "A");
+assert(results[1]["member"] == "B");
+
+let counter = 0;
+parallel {
+    counter += 1;
+    counter += 1;
+    counter += 1;
+}
+assert(counter == 3);

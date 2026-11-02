@@ -1,0 +1,10 @@
+[package]
+name = "ailang-runtime"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Runtime value representation, environments, and execution contexts for AILang."
+
+[dependencies]
+ailang-ast = { workspace = true }

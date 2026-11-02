@@ -1,0 +1,27 @@
+// A tiny, linear text adventure — demonstrates strings, conditionals, and
+// a simple game loop shape (with a scripted "input" for non-interactive
+// runs via `ail test`/`ail run` in CI; swap in real `input()` calls for
+// an interactive session).
+let has_key = false;
+let health = 10;
+
+println("You stand before a locked door.");
+println("A rusty key glints on the floor.");
+
+has_key = true;
+println("You pick up the key.");
+
+if has_key {
+    println("You unlock the door and step through.");
+    println("A dragon awakens! You lose 4 health.");
+    health -= 4;
+} else {
+    println("The door won't budge. Game over.");
+    exit(0);
+}
+
+if health > 0 {
+    println("You limp to victory with " + to_string(health) + " health remaining.");
+} else {
+    println("You did not survive.");
+}

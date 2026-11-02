@@ -1,0 +1,26 @@
+[package]
+name = "ail"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "The AILang command-line tool: run, build, check, fmt, repl, test, init, new."
+
+[[bin]]
+name = "ail"
+path = "src/main.rs"
+
+[dependencies]
+ailang-lexer = { workspace = true }
+ailang-parser = { workspace = true }
+ailang-ast = { workspace = true }
+ailang-semantic = { workspace = true }
+ailang-types = { workspace = true }
+ailang-interpreter = { workspace = true }
+ailang-optimizer = { workspace = true }
+ailang-diagnostics = { workspace = true }
+ailang-fmt = { workspace = true }
+ailang-pm = { workspace = true }
+ailang-repl = { path = "../repl" }
+clap = { workspace = true }
+anyhow = { workspace = true }

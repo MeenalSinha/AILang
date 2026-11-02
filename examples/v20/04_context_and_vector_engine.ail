@@ -1,0 +1,24 @@
+// Intelligent Context Engine + Native Vector Engine: real context
+// compression/deduplication and a real embedding-backed vector index
+// with metadata filtering.
+let long_context = "The quarterly results show strong growth in the enterprise segment driven by new contracts";
+println("Compressed: " + compress_context(long_context, 6));
+
+let chunks = ["revenue grew 20%", "revenue grew 20%", "costs stayed flat", "revenue grew 20%"];
+println("Deduped: " + to_string(dedupe_chunks(chunks)));
+
+vector_index_add("Reports", "q1", "revenue grew 20 percent driven by enterprise contracts", {"quarter": "Q1"});
+vector_index_add("Reports", "q2", "costs remained flat while headcount increased slightly", {"quarter": "Q2"});
+vector_index_add("Reports", "q1-summary", "enterprise segment strong growth new contracts", {"quarter": "Q1"});
+
+println("Search (all quarters):");
+let all_results = vector_index_search("Reports", "enterprise growth contracts", 3, {});
+for i in 0..len(all_results) {
+    println("  " + all_results[i]["id"] + " (score " + to_string(all_results[i]["score"]) + ")");
+}
+
+println("Search (Q1 only, metadata filter):");
+let q1_results = vector_index_search("Reports", "enterprise growth contracts", 3, {"quarter": "Q1"});
+for i in 0..len(q1_results) {
+    println("  " + q1_results[i]["id"]);
+}

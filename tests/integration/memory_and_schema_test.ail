@@ -1,0 +1,15 @@
+// Integration test: memory persistence and schema-based generation.
+remember("k1", "v1");
+assert(recall("k1") == "v1");
+forget("k1");
+assert(recall("k1") == null);
+
+schema Item {
+    name: string;
+    quantity: int;
+    available: bool;
+}
+let item = generate Item;
+assert(item["name"] == "");
+assert(item["quantity"] == 0);
+assert(item["available"] == false);

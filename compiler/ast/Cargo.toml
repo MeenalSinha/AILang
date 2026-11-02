@@ -1,0 +1,11 @@
+[package]
+name = "ailang-ast"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Abstract Syntax Tree node definitions shared by every AILang compiler phase."
+
+[dependencies]
+ailang-diagnostics = { workspace = true }
+serde = { workspace = true }

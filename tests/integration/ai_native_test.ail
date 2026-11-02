@@ -1,0 +1,22 @@
+// Integration test: core v0.5 AI-native constructs working together.
+model GPT5;
+tool Calculator;
+permission internet;
+
+agent Analyst {
+    model GPT5;
+    tools [Calculator];
+}
+
+assert(type(Analyst) == "agent");
+assert(type(GPT5) == "model");
+
+let result = invoke_tool("Analyst", "Calculator", "(4 + 6) * 2");
+assert(result == 20.0);
+
+workflow Solo {
+    Analyst;
+}
+let results = run_workflow("Solo", "test input");
+assert(len(results) == 1);
+assert(results[0]["stage"] == "Analyst");
