@@ -626,6 +626,85 @@ impl SemanticAnalyzer {
                 self.check_block(body);
                 self.pop_scope();
             }
+
+            // v3.0 constructs — registered in the symbol table so forward
+            // references and cross-construct checks work correctly.
+            Stmt::Goal { name, body, .. } => {
+                self.declare(&name.name, SymbolKind::AiDecl, name.span);
+                self.push_scope();
+                self.check_block(body);
+                self.pop_scope();
+            }
+
+            Stmt::Supervisor { name, children, .. } => {
+                self.declare(&name.name, SymbolKind::AiDecl, name.span);
+                for child in children {
+                    // Warn if a named child was never declared — it might be
+                    // an agent that simply hasn't been declared yet (forward
+                    // reference), which is normal in large programs. The
+                    // semantic pass records it as a use for future resolution.
+                    self.check_reference(
+                        &self.registry.agents.clone(),
+                        &child.name,
+                        child.span,
+                        "agent",
+                    );
+                }
+            }
+
+            Stmt::Resource { name, config, .. } => {
+                self.declare(&name.name, SymbolKind::AiDecl, name.span);
+                for (_, v) in config {
+                    self.check_expr(v);
+                }
+            }
+
+            Stmt::Reason { max_iterations, budget, body, .. } => {
+                if let Some(e) = max_iterations {
+                    self.check_expr(e);
+                }
+                if let Some(e) = budget {
+                    self.check_expr(e);
+                }
+                self.push_scope();
+                self.check_block(body);
+                self.pop_scope();
+            }
+
+            Stmt::Device { name, .. } => {
+                self.declare(&name.name, SymbolKind::AiDecl, name.span);
+            }
+
+            Stmt::Ui { name, .. } => {
+                self.declare(&name.name, SymbolKind::AiDecl, name.span);
+            }
+
+            Stmt::Application { name, agents, models, knowledge, memory, workflows, .. } => {
+                self.declare(&name.name, SymbolKind::AiDecl, name.span);
+                for a in agents {
+                    self.check_reference(&self.registry.agents.clone(), &a.name, a.span, "agent");
+                }
+                for m in models {
+                    self.check_reference(&self.registry.models.clone(), &m.name, m.span, "model");
+                }
+                for k in knowledge.iter().chain(memory.iter()) {
+                    // knowledge/memory refs — record uses for resolution
+                    let _ = k;
+                }
+                for w in workflows {
+                    let _ = w;
+                }
+            }
+
+            Stmt::Policy { name, .. } => {
+                self.declare(&name.name, SymbolKind::AiDecl, name.span);
+            }
+
+            Stmt::Emit { payload, .. } => {
+                if let Some(e) = payload {
+                    self.check_expr(e);
+                }
+            }
         }
     }
 

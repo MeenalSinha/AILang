@@ -1,0 +1,59 @@
+// AILang v3.0 — Autonomous Research Organization
+// Demonstrates: goal, supervisor, reason, emit, on, agent (autonomous + persistent)
+
+model Gemini {
+    provider "google";
+    context_window 1000000;
+}
+
+permission internet;
+permission fs_read;
+
+memory ResearchMemory persistent;
+
+resource IntelligencePool intelligence {
+    token_budget 500000;
+    cost_budget 10.0;
+}
+
+agent Coordinator {
+    model Gemini;
+    memory ResearchMemory;
+    permissions [internet];
+}
+
+agent Researcher {
+    model Gemini;
+    memory ResearchMemory;
+    permissions [internet, fs_read];
+}
+
+agent Analyst {
+    model Gemini;
+    memory ResearchMemory;
+}
+
+supervisor OrgSupervisor one_for_one {
+    children [Coordinator, Researcher, Analyst];
+}
+
+on research_complete {
+    println("Event received! Topic: " + payload);
+    println("Memory contains: " + recall("current_query"));
+}
+
+goal DeepResearch "Produce a comprehensive research report on a given topic" {
+    let topic = "quantum computing applications in drug discovery";
+    println("Starting research on: " + topic);
+
+    reason max 3 iterations {
+        let query = "Research overview: " + topic;
+        remember("current_query", query);
+        println("Reasoning iteration complete");
+    }
+
+    emit "research_complete" topic;
+}
+
+println("Organization initialized.");
+println("Supervisor: OrgSupervisor");

@@ -401,6 +401,95 @@ pub enum Stmt {
         body: Block,
         span: Span,
     },
+
+    // ---------------------------------------------------------------
+    // v3.0 AI Operating System constructs.
+    // These model agents as OS processes, goals as first-class objects,
+    // supervisors as fault-tolerance machinery, resources as managed
+    // allocations, and applications as isolated sandboxes.
+    // ---------------------------------------------------------------
+
+    /// `goal Name "objective" { constraint ...; body }`
+    /// Declares a goal-oriented task with measurable constraints.
+    Goal {
+        name: Ident,
+        objective: String,
+        constraints: Vec<GoalConstraint>,
+        body: Block,
+        span: Span,
+    },
+
+    /// `supervisor Name strategy OneForOne { children [A, B, C]; }`
+    /// Erlang-style fault-tolerance tree.
+    Supervisor {
+        name: Ident,
+        strategy: SupervisionStrategy,
+        children: Vec<Ident>,
+        span: Span,
+    },
+
+    /// `resource Name intelligence { token_budget 100000; cost_budget 5.0; }`
+    /// Declares a managed AI resource (tokens, cost, energy, compute).
+    Resource {
+        name: Ident,
+        kind: ResourceKind,
+        config: Vec<(String, Expr)>,
+        span: Span,
+    },
+
+    /// `reason { max_iterations 10; budget "1.0"; body }`
+    /// A Reason-Verify-Revise loop — the agent's main cognitive loop.
+    Reason {
+        max_iterations: Option<Expr>,
+        budget: Option<Expr>,
+        body: Block,
+        span: Span,
+    },
+
+    /// `device CamA camera { permissions ["read"]; }`
+    /// Declares a hardware device accessible to agents.
+    Device {
+        name: Ident,
+        kind: DeviceKind,
+        permissions: Vec<String>,
+        span: Span,
+    },
+
+    /// `ui Dashboard { title "My App"; panel PanelA; }`
+    /// Declares a user-interface surface.
+    Ui {
+        name: Ident,
+        title: Option<String>,
+        panels: Vec<UiPanel>,
+        span: Span,
+    },
+
+    /// `application MyApp { agents [A, B]; policies [p]; }`
+    /// Top-level application manifest — the unit of deployment.
+    Application {
+        name: Ident,
+        agents: Vec<Ident>,
+        models: Vec<Ident>,
+        knowledge: Vec<Ident>,
+        memory: Vec<Ident>,
+        workflows: Vec<Ident>,
+        policies: Vec<PolicyRule>,
+        span: Span,
+    },
+
+    /// `policy MyPolicy { allow agent_name internet; deny * filesystem.write; }`
+    Policy {
+        name: Ident,
+        rules: Vec<PolicyRule>,
+        span: Span,
+    },
+
+    /// `emit "event_name" payload_expr;`
+    Emit {
+        event: String,
+        payload: Option<Expr>,
+        span: Span,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -437,7 +526,17 @@ impl Stmt {
             | Stmt::AiPlaceholder { span, .. }
             | Stmt::Network { span, .. }
             | Stmt::Cluster { span, .. }
-            | Stmt::OnEvent { span, .. } => *span,
+            | Stmt::OnEvent { span, .. }
+            // v3.0 constructs
+            | Stmt::Goal { span, .. }
+            | Stmt::Supervisor { span, .. }
+            | Stmt::Resource { span, .. }
+            | Stmt::Reason { span, .. }
+            | Stmt::Device { span, .. }
+            | Stmt::Ui { span, .. }
+            | Stmt::Application { span, .. }
+            | Stmt::Policy { span, .. }
+            | Stmt::Emit { span, .. } => *span,
             Stmt::Block(b) => b.span,
         }
     }
@@ -517,20 +616,103 @@ impl AiPlaceholderKind {
     }
 }
 
-/// Keywords reserved for constructs beyond v0.5. As of v0.5, `agent model
-/// workflow tool memory knowledge prompt reasoning schema pipeline
-/// parallel permission deploy team embedding dataset vector task` are all
-/// real keywords with real `Stmt`/`Expr` grammar (see the variants above
-/// and `ailang-lexer`'s `Token` enum) — they've graduated out of this list.
-/// `generate` is likewise a real keyword (see `Expr::Generate`), so it was
-/// never added here.
-///
+/// Keywords reserved for constructs beyond v0.5. As of v3.0, all v0.5
+/// keywords plus the new v3.0 AI OS keywords are real tokens with grammar.
 /// This list exists so a *future* release can reserve new AI-native
-/// keywords the same way v0.1 reserved the ones that became v0.5: promote
-/// a name from this list to a real `Token` variant plus AST grammar,
-/// without breaking any v0.1-vintage program that happened to use the name
-/// as an identifier before it was reserved.
+/// keywords the same way v0.1 reserved the ones that became v0.5.
 pub const FUTURE_RESERVED_KEYWORDS: &[&str] = &[];
+
+// ---------------------------------------------------------------
+// v3.0 supporting types for the new AST nodes
+// ---------------------------------------------------------------
+
+/// A goal constraint — bounds on accuracy, cost, latency, deadline, energy.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GoalConstraint {
+    pub kind: ConstraintKind,
+    pub op: ConstraintOp,
+    pub value: ConstraintValue,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConstraintKind {
+    Accuracy,
+    Budget,
+    Deadline,
+    Latency,
+    Energy,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConstraintOp {
+    Gt,
+    Lt,
+    Eq,
+    GtEq,
+    LtEq,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum ConstraintValue {
+    Float(f64),
+    Int(i64),
+    String(String),
+}
+
+/// Supervision strategy — mirrors Erlang/OTP supervisor behaviour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SupervisionStrategy {
+    /// Restart only the failed child.
+    OneForOne,
+    /// Restart all children when any one fails.
+    OneForAll,
+    /// Restart the failed child and every child declared after it.
+    RestForOne,
+}
+
+/// Resource kind for `resource` declarations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ResourceKind {
+    Intelligence,
+    Memory,
+    Compute,
+    Model,
+    Knowledge,
+}
+
+/// Device kind for `device` declarations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DeviceKind {
+    Camera,
+    Microphone,
+    Speaker,
+    Sensor,
+    Gpu,
+}
+
+/// A panel inside a `ui` block.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct UiPanel {
+    pub name: Ident,
+    pub kind: String,
+    pub config: Vec<(String, String)>,
+}
+
+/// A single access-control rule inside `application` or `policy` blocks.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PolicyRule {
+    /// Agent name or `"*"` for all agents.
+    pub subject: String,
+    pub action: PolicyAction,
+    /// Resource path e.g. `"internet"`, `"filesystem.write"`, `"*"`.
+    pub resource: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PolicyAction {
+    Allow,
+    Deny,
+}
 
 #[cfg(test)]
 mod tests {

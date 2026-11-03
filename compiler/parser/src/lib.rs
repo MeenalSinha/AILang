@@ -200,6 +200,16 @@ impl Parser {
             | Token::Pipeline
             | Token::Task
             | Token::Deploy => self.ai_placeholder_decl(),
+            // v3.0 AI Operating System declarations
+            Token::Goal => self.goal_decl(),
+            Token::Supervisor => self.supervisor_decl(),
+            Token::Resource => self.resource_decl(),
+            Token::Reason => self.reason_decl(),
+            Token::Device => self.device_decl(),
+            Token::Ui => self.ui_decl(),
+            Token::Application => self.application_decl(),
+            Token::Policy => self.policy_decl(),
+            Token::Emit => self.emit_stmt(),
             _ => self.statement(),
         }
     }
@@ -388,7 +398,13 @@ impl Parser {
 
     fn memory_ref(&mut self) -> Option<MemoryRef> {
         match self.peek().clone() {
+            // v3.0: `persistent` is now a keyword token, not an identifier.
+            // Accept both forms for backward compatibility.
             Token::Identifier(name) if name == "persistent" => {
+                self.advance();
+                Some(MemoryRef::Persistent)
+            }
+            Token::Persistent => {
                 self.advance();
                 Some(MemoryRef::Persistent)
             }
@@ -487,6 +503,11 @@ impl Parser {
         let name = self.identifier("memory name")?;
         let kind = match self.peek().clone() {
             Token::Identifier(k) if k == "persistent" => {
+                self.advance();
+                MemoryKind::Persistent
+            }
+            // v3.0: `persistent` is now a dedicated keyword token.
+            Token::Persistent => {
                 self.advance();
                 MemoryKind::Persistent
             }
@@ -1282,6 +1303,19 @@ impl Parser {
                 self.advance();
                 Some(Expr::Identifier { name, span })
             }
+            // v3.0: Some v3.0 keywords may appear as function call targets in
+            // existing code (e.g. `emit("event", payload)`). Allow them here
+            // so the `call()` layer can wrap them as function calls. This
+            // preserves backward compatibility while the statement-level
+            // parsers handle the *declaration* forms.
+            Token::Emit => {
+                self.advance();
+                Some(Expr::Identifier { name: "emit".into(), span })
+            }
+            Token::Checkpoint => {
+                self.advance();
+                Some(Expr::Identifier { name: "checkpoint".into(), span })
+            }
             Token::LParen => {
                 self.advance();
                 let inner = self.expression()?;
@@ -1337,6 +1371,452 @@ impl Parser {
                 None
             }
         }
+    }
+
+    // ---------------------------------------------------------------
+    // v3.0 AI Operating System declaration parsers
+    // ---------------------------------------------------------------
+
+    /// `goal Name "objective" { [constraints { ... }] body }`
+    fn goal_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // goal
+        let name = self.identifier("goal name")?;
+        let objective = match self.peek().clone() {
+            Token::StringLiteral(s) => { self.advance(); s }
+            _ => {
+                let span = self.peek_span();
+                self.diagnostics.push(Diagnostic::error(
+                    "P030", "expected objective string after goal name", span,
+                ));
+                return None;
+            }
+        };
+        // Optional constraints block
+        let mut constraints = Vec::new();
+        if self.check(&Token::LBrace) {
+            // peek inside: if we see `constraints`, parse that sub-block
+            // Otherwise the whole `{...}` is the body.
+            // We detect `constraints` by looking one token ahead.
+            // Because block() consumes `{`, we do a 2-token lookahead.
+            if self.pos + 1 < self.tokens.len() {
+                if let Token::Identifier(k) = &self.tokens[self.pos + 1].token {
+                    if k == "constraints" {
+                        self.advance(); // {
+                        self.advance(); // constraints
+                        self.expect(Token::LBrace, "'{'");
+                        // Parse constraint lines: `kind op value;`
+                        while !self.check(&Token::RBrace) && !self.is_at_end() {
+                            let cspan = self.peek_span();
+                            // kind
+                            let kind = match self.peek().clone() {
+                                Token::Identifier(k) => {
+                                    self.advance();
+                                    match k.as_str() {
+                                        "accuracy" => ConstraintKind::Accuracy,
+                                        "budget" | "cost" => ConstraintKind::Budget,
+                                        "deadline" => ConstraintKind::Deadline,
+                                        "latency" => ConstraintKind::Latency,
+                                        "energy" => ConstraintKind::Energy,
+                                        _ => ConstraintKind::Budget,
+                                    }
+                                }
+                                _ => { self.advance(); ConstraintKind::Budget }
+                            };
+                            // op
+                            let op = match self.peek() {
+                                Token::Gt => { self.advance(); ConstraintOp::Gt }
+                                Token::Lt => { self.advance(); ConstraintOp::Lt }
+                                Token::GtEq => { self.advance(); ConstraintOp::GtEq }
+                                Token::LtEq => { self.advance(); ConstraintOp::LtEq }
+                                Token::EqEq => { self.advance(); ConstraintOp::Eq }
+                                _ => { self.advance(); ConstraintOp::Lt }
+                            };
+                            // value
+                            let value = match self.peek().clone() {
+                                Token::FloatLiteral(f) => { self.advance(); ConstraintValue::Float(f) }
+                                Token::IntLiteral(i) => { self.advance(); ConstraintValue::Int(i) }
+                                Token::StringLiteral(s) => { self.advance(); ConstraintValue::String(s) }
+                                _ => { self.advance(); ConstraintValue::Int(0) }
+                            };
+                            self.match_tok(&Token::Semicolon);
+                            constraints.push(GoalConstraint { kind, op, value });
+                            let _ = cspan;
+                        }
+                        self.expect(Token::RBrace, "'}'");
+                    }
+                }
+            }
+        }
+        let body = self.block()?;
+        let end = body.span;
+        Some(Stmt::Goal { name, objective, constraints, body, span: start.merge(end) })
+    }
+
+    /// `supervisor Name strategy { children [A, B, C]; }`
+    fn supervisor_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // supervisor
+        let name = self.identifier("supervisor name")?;
+        // strategy: one_for_one | one_for_all | rest_for_one
+        let strategy = match self.peek().clone() {
+            Token::Identifier(s) => {
+                self.advance();
+                match s.as_str() {
+                    "one_for_all" => SupervisionStrategy::OneForAll,
+                    "rest_for_one" => SupervisionStrategy::RestForOne,
+                    _ => SupervisionStrategy::OneForOne,
+                }
+            }
+            _ => SupervisionStrategy::OneForOne,
+        };
+        let mut children = Vec::new();
+        self.expect(Token::LBrace, "'{'");
+        while !self.check(&Token::RBrace) && !self.is_at_end() {
+            match self.peek().clone() {
+                Token::Identifier(k) if k == "children" => {
+                    self.advance();
+                    children = self.identifier_list_in_brackets("child agent name")
+                        .unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                _ => { self.advance(); } // skip unknown config
+            }
+        }
+        let end = self.expect(Token::RBrace, "'}'");
+        Some(Stmt::Supervisor { name, strategy, children, span: start.merge(end) })
+    }
+
+    /// `resource Name kind { key value; ... }`
+    fn resource_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // resource
+        let name = self.identifier("resource name")?;
+        let kind = match self.peek().clone() {
+            Token::Identifier(k) => {
+                self.advance();
+                match k.as_str() {
+                    "intelligence" | "ai" => ResourceKind::Intelligence,
+                    "compute" => ResourceKind::Compute,
+                    "model" => ResourceKind::Model,
+                    "knowledge" => ResourceKind::Knowledge,
+                    _ => ResourceKind::Memory,
+                }
+            }
+            Token::Intelligence => { self.advance(); ResourceKind::Intelligence }
+            _ => ResourceKind::Intelligence,
+        };
+        let mut config = Vec::new();
+        self.expect(Token::LBrace, "'{'");
+        while !self.check(&Token::RBrace) && !self.is_at_end() {
+            let key = match self.peek().clone() {
+                Token::Identifier(k) => { self.advance(); k }
+                _ => { self.advance(); continue; }
+            };
+            let val = self.expression()?;
+            self.match_tok(&Token::Semicolon);
+            config.push((key, val));
+        }
+        let end = self.expect(Token::RBrace, "'}'");
+        Some(Stmt::Resource { name, kind, config, span: start.merge(end) })
+    }
+
+    /// `reason [max N iterations] [budget expr] { body }`
+    fn reason_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // reason
+        let mut max_iterations = None;
+        let mut budget = None;
+        // Optional `max N iterations`
+        if let Token::Identifier(k) = self.peek().clone() {
+            if k == "max" {
+                self.advance();
+                let n = self.expression()?;
+                max_iterations = Some(n);
+                // optional `iterations` keyword
+                if let Token::Identifier(k2) = self.peek().clone() {
+                    if k2 == "iterations" { self.advance(); }
+                }
+            }
+        }
+        // Optional `budget expr`
+        if matches!(self.peek(), Token::Budget) {
+            self.advance();
+            budget = Some(self.expression()?);
+        }
+        let body = self.block()?;
+        let end = body.span;
+        Some(Stmt::Reason { max_iterations, budget, body, span: start.merge(end) })
+    }
+
+    /// `device Name kind { permissions ["p1", "p2"]; }`
+    fn device_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // device
+        let name = self.identifier("device name")?;
+        let kind = match self.peek().clone() {
+            Token::Camera => { self.advance(); DeviceKind::Camera }
+            Token::Microphone => { self.advance(); DeviceKind::Microphone }
+            Token::Speaker => { self.advance(); DeviceKind::Speaker }
+            Token::Sensor => { self.advance(); DeviceKind::Sensor }
+            Token::Identifier(k) => {
+                self.advance();
+                match k.as_str() {
+                    "camera" => DeviceKind::Camera,
+                    "microphone" => DeviceKind::Microphone,
+                    "speaker" => DeviceKind::Speaker,
+                    "sensor" => DeviceKind::Sensor,
+                    "gpu" => DeviceKind::Gpu,
+                    _ => DeviceKind::Sensor,
+                }
+            }
+            _ => DeviceKind::Sensor,
+        };
+        let mut permissions = Vec::new();
+        self.expect(Token::LBrace, "'{'");
+        while !self.check(&Token::RBrace) && !self.is_at_end() {
+            match self.peek().clone() {
+                Token::Identifier(k) if k == "permissions" || k == "permission" => {
+                    self.advance();
+                    if self.check(&Token::LBracket) {
+                        self.advance(); // [
+                        while !self.check(&Token::RBracket) && !self.is_at_end() {
+                            if let Token::StringLiteral(s) = self.peek().clone() {
+                                self.advance();
+                                permissions.push(s);
+                            } else {
+                                self.advance();
+                            }
+                            self.match_tok(&Token::Comma);
+                        }
+                        self.expect(Token::RBracket, "']'");
+                    } else if let Token::StringLiteral(s) = self.peek().clone() {
+                        self.advance();
+                        permissions.push(s);
+                    } else if let Token::Identifier(p) = self.peek().clone() {
+                        self.advance();
+                        permissions.push(p);
+                    }
+                    self.match_tok(&Token::Semicolon);
+                }
+                _ => { self.advance(); }
+            }
+        }
+        let end = self.expect(Token::RBrace, "'}'");
+        Some(Stmt::Device { name, kind, permissions, span: start.merge(end) })
+    }
+
+    /// `ui Name { title "T"; panel P kind; ... }`
+    fn ui_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // ui
+        let name = self.identifier("ui name")?;
+        let mut title = None;
+        let mut panels = Vec::new();
+        self.expect(Token::LBrace, "'{'");
+        while !self.check(&Token::RBrace) && !self.is_at_end() {
+            match self.peek().clone() {
+                Token::Identifier(k) if k == "title" => {
+                    self.advance();
+                    if let Token::StringLiteral(s) = self.peek().clone() {
+                        self.advance();
+                        title = Some(s);
+                    }
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Panel => {
+                    self.advance();
+                    let panel_name = self.identifier("panel name")?;
+                    let panel_kind = match self.peek().clone() {
+                        Token::Identifier(k) => { self.advance(); k }
+                        _ => "generic".to_string(),
+                    };
+                    let mut config = Vec::new();
+                    // Optional inline config key-value pairs
+                    while !self.check(&Token::Semicolon) && !self.check(&Token::RBrace) && !self.is_at_end() {
+                        match self.peek().clone() {
+                            Token::Identifier(k) => {
+                                self.advance();
+                                let v = match self.peek().clone() {
+                                    Token::StringLiteral(s) => { self.advance(); s }
+                                    Token::Identifier(s) => { self.advance(); s }
+                                    _ => String::new(),
+                                };
+                                config.push((k, v));
+                            }
+                            _ => break,
+                        }
+                    }
+                    self.match_tok(&Token::Semicolon);
+                    panels.push(UiPanel { name: panel_name, kind: panel_kind, config });
+                }
+                Token::Identifier(k) if k == "panel" => {
+                    self.advance();
+                    let panel_name = self.identifier("panel name")?;
+                    let panel_kind = match self.peek().clone() {
+                        Token::Identifier(k2) => { self.advance(); k2 }
+                        _ => "generic".to_string(),
+                    };
+                    let config = Vec::new();
+                    self.match_tok(&Token::Semicolon);
+                    panels.push(UiPanel { name: panel_name, kind: panel_kind, config });
+                }
+                _ => { self.advance(); }
+            }
+        }
+        let end = self.expect(Token::RBrace, "'}'");
+        Some(Stmt::Ui { name, title, panels, span: start.merge(end) })
+    }
+
+    /// `application Name { agents [...]; models [...]; policies { allow ...; } }`
+    fn application_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // application
+        let name = self.identifier("application name")?;
+        let mut agents = Vec::new();
+        let mut models = Vec::new();
+        let mut knowledge = Vec::new();
+        let mut memory = Vec::new();
+        let mut workflows = Vec::new();
+        let mut policies = Vec::new();
+        self.expect(Token::LBrace, "'{'");
+        while !self.check(&Token::RBrace) && !self.is_at_end() {
+            match self.peek().clone() {
+                Token::Agent => {
+                    self.advance();
+                    agents = self.identifier_list_in_brackets("agent name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Identifier(k) if k == "agents" => {
+                    self.advance();
+                    agents = self.identifier_list_in_brackets("agent name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Model => {
+                    self.advance();
+                    models = self.identifier_list_in_brackets("model name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Identifier(k) if k == "models" => {
+                    self.advance();
+                    models = self.identifier_list_in_brackets("model name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Identifier(k) if k == "workflows" => {
+                    self.advance();
+                    workflows = self.identifier_list_in_brackets("workflow name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Knowledge => {
+                    self.advance();
+                    knowledge = self.identifier_list_in_brackets("knowledge name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Identifier(k) if k == "knowledge" => {
+                    self.advance();
+                    knowledge = self.identifier_list_in_brackets("knowledge name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Memory => {
+                    self.advance();
+                    memory = self.identifier_list_in_brackets("memory name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Identifier(k) if k == "memory" => {
+                    self.advance();
+                    memory = self.identifier_list_in_brackets("memory name").unwrap_or_default();
+                    self.match_tok(&Token::Semicolon);
+                }
+                Token::Identifier(k) if k == "policies" => {
+                    self.advance();
+                    self.expect(Token::LBrace, "'{'");
+                    while !self.check(&Token::RBrace) && !self.is_at_end() {
+                        if let Some(rule) = self.policy_rule() {
+                            policies.push(rule);
+                        }
+                    }
+                    self.expect(Token::RBrace, "'}'");
+                }
+                Token::Allow => {
+                    if let Some(rule) = self.policy_rule() { policies.push(rule); }
+                }
+                Token::Deny => {
+                    if let Some(rule) = self.policy_rule() { policies.push(rule); }
+                }
+                _ => { self.advance(); }
+            }
+        }
+        let end = self.expect(Token::RBrace, "'}'");
+        Some(Stmt::Application { name, agents, models, knowledge, memory, workflows, policies, span: start.merge(end) })
+    }
+
+    /// `policy Name { allow subject resource; deny subject resource; }`
+    fn policy_decl(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        self.advance(); // policy
+        let name = self.identifier("policy name")?;
+        let mut rules = Vec::new();
+        self.expect(Token::LBrace, "'{'");
+        while !self.check(&Token::RBrace) && !self.is_at_end() {
+            if let Some(rule) = self.policy_rule() {
+                rules.push(rule);
+            }
+        }
+        let end = self.expect(Token::RBrace, "'}'");
+        Some(Stmt::Policy { name, rules, span: start.merge(end) })
+    }
+
+    /// Parses one `allow subject resource;` or `deny subject resource;` line.
+    fn policy_rule(&mut self) -> Option<PolicyRule> {
+        let action = match self.peek() {
+            Token::Allow => { self.advance(); PolicyAction::Allow }
+            Token::Deny => { self.advance(); PolicyAction::Deny }
+            Token::Identifier(k) if k == "allow" => { self.advance(); PolicyAction::Allow }
+            Token::Identifier(k) if k == "deny" => { self.advance(); PolicyAction::Deny }
+            _ => { self.advance(); return None; }
+        };
+        let subject = match self.peek().clone() {
+            Token::Identifier(s) => { self.advance(); s }
+            Token::Star => { self.advance(); "*".to_string() }
+            _ => { self.advance(); "*".to_string() }
+        };
+        let resource = match self.peek().clone() {
+            Token::Identifier(r) => { self.advance(); r }
+            Token::Star => { self.advance(); "*".to_string() }
+            _ => "*".to_string(),
+        };
+        self.match_tok(&Token::Semicolon);
+        Some(PolicyRule { subject, action, resource })
+    }
+
+    /// `emit "event_name" [payload_expr];`
+    /// If followed by `(`, parsed as an expression statement (function call).
+    fn emit_stmt(&mut self) -> Option<Stmt> {
+        let start = self.peek_span();
+        // Peek one token ahead: if next is `(`, treat as expression (function call).
+        if self.pos + 1 < self.tokens.len() {
+            if matches!(self.tokens[self.pos + 1].token, Token::LParen) {
+                return self.expr_stmt();
+            }
+        }
+        self.advance(); // emit
+        let event = match self.peek().clone() {
+            Token::StringLiteral(s) => { self.advance(); s }
+            _ => {
+                let span = self.peek_span();
+                self.diagnostics.push(Diagnostic::error(
+                    "P031", "expected event name string after `emit`", span,
+                ));
+                return None;
+            }
+        };
+        let payload = if !self.check(&Token::Semicolon) && !self.is_at_end() {
+            Some(self.expression()?)
+        } else {
+            None
+        };
+        let end = self.expect(Token::Semicolon, "';'");
+        Some(Stmt::Emit { event, payload, span: start.merge(end) })
     }
 }
 

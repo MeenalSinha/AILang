@@ -1,0 +1,22 @@
+[policy::EnterpriseKnowledgePolicy] rules=3
+[policy::EnterpriseKnowledgePolicy] allow QueryAgent knowledge_query
+[policy::EnterpriseKnowledgePolicy] allow IngestionAgent storage_read
+[policy::EnterpriseKnowledgePolicy] deny QueryAgent storage_read
+[application::KnowledgeFabricApp] registering
+[application::KnowledgeFabricApp] agents=[QueryAgent, IngestionAgent]
+[application::KnowledgeFabricApp] models=[FastModel]
+[application::KnowledgeFabricApp] knowledge+memory=[OrgDocs]
+[supervisor::KnowledgeSupervisor] strategy=one_for_one children=[QueryAgent, IngestionAgent]
+[goal::IngestAndQuery] objective: Ingest organizational document and verify semantic retrieval
+Ingested: DOC-2026-Q3-STRATEGY
+Content: Enterprise distributed AI agents are operational across edge nodes.
+[reason] starting RVR loop max_iterations=2
+[reason] iteration 1
+Validating semantic vector index coherence...
+[reason] iteration 2
+Validating semantic vector index coherence...
+[reason] loop complete
+[emit] event="indexed_document" payload=DOC-2026-Q3-STRATEGY
+Indexed document confirmation: DOC-2026-Q3-STRATEGY
+[goal::IngestAndQuery] completed
+Enterprise Knowledge Fabric operational.

@@ -1,0 +1,78 @@
+// AILang v3.0 — AI Software Team
+// Demonstrates: application, policy, supervisor, agents with lifecycle management
+
+model ClaudeModel {
+    provider "anthropic";
+    context_window 200000;
+}
+
+model GeminiModel {
+    provider "google";
+    context_window 1000000;
+}
+
+permission internet;
+permission jira;
+permission fs_read;
+permission fs_write;
+permission terminal;
+
+agent PM {
+    model GeminiModel;
+    permissions [internet, jira];
+}
+
+agent Architect {
+    model ClaudeModel;
+    permissions [fs_read, internet];
+}
+
+agent Developer {
+    model ClaudeModel;
+    permissions [fs_read, fs_write, terminal];
+}
+
+agent Tester {
+    model GeminiModel;
+    permissions [fs_read, terminal];
+}
+
+agent SecurityReviewer {
+    model ClaudeModel;
+    permissions [fs_read, internet];
+}
+
+supervisor TeamSupervisor one_for_one {
+    children [PM, Architect, Developer, Tester, SecurityReviewer];
+}
+
+policy EnterprisePolicy {
+    allow PM jira;
+    allow PM internet;
+    allow Developer fs_write;
+    allow Developer terminal;
+    deny Developer production_database;
+    allow Tester terminal;
+    deny Tester fs_write;
+}
+
+application SoftwareTeamApp {
+    agents [PM, Architect, Developer, Tester, SecurityReviewer];
+    models [ClaudeModel, GeminiModel];
+}
+
+on feature_shipped {
+    println("Event received: Feature shipped successfully -> " + payload);
+}
+
+goal BuildFeature "Implement, review and ship a production feature" {
+    let feature = "distributed agent checkpointing";
+    println("[PM] Planning feature: " + feature);
+    println("[Architect] Designing architecture for: " + feature);
+    println("[Developer] Implementing: " + feature);
+    println("[Tester] Running tests for: " + feature);
+    println("[SecurityReviewer] Security audit complete.");
+    emit "feature_shipped" feature;
+}
+
+println("Software team initialized with supervision and policy enforcement.");

@@ -22,5 +22,8 @@ ailang-diagnostics = { workspace = true }
 ailang-fmt = { workspace = true }
 ailang-pm = { workspace = true }
 ailang-repl = { path = "../repl" }
+ailang-kernel = { workspace = true }
+ailang-memory-fabric = { workspace = true }
+ailang-application = { workspace = true }
 clap = { workspace = true }
 anyhow = { workspace = true }

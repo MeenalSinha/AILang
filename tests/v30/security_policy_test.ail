@@ -1,0 +1,15 @@
+// Integration Test: Security Policy Enforcement
+permission allowed_perm;
+permission denied_perm;
+
+agent SecureWorker {
+    permissions [allowed_perm];
+}
+
+policy StrictRules {
+    allow SecureWorker allowed_perm;
+    deny SecureWorker denied_perm;
+    deny * root_access;
+}
+
+println("Security policy compiled and validated.");

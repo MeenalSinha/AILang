@@ -99,6 +99,90 @@ pub enum Token {
     #[token("on")]
     On,
 
+    // ---- v3.0 AI Operating System keywords ----
+    // Goal-oriented programming
+    #[token("goal")]
+    Goal,
+    #[token("plan")]
+    Plan,
+    #[token("supervisor")]
+    Supervisor,
+    #[token("resource")]
+    Resource,
+    #[token("intelligence")]
+    Intelligence,
+    #[token("allocate")]
+    Allocate,
+    #[token("autonomous")]
+    Autonomous,
+    #[token("persistent")]
+    Persistent,
+    #[token("restart_on_failure")]
+    RestartOnFailure,
+    #[token("constraint")]
+    Constraint,
+    #[token("optimize")]
+    Optimize,
+    #[token("budget")]
+    Budget,
+    // Device layer
+    #[token("device")]
+    Device,
+    #[token("camera")]
+    Camera,
+    #[token("microphone")]
+    Microphone,
+    #[token("speaker")]
+    Speaker,
+    #[token("sensor")]
+    Sensor,
+    // UI / dashboard
+    #[token("ui")]
+    Ui,
+    #[token("panel")]
+    Panel,
+    #[token("dashboard")]
+    Dashboard,
+    // Event system
+    #[token("event")]
+    Event,
+    #[token("emit")]
+    Emit,
+    #[token("when")]
+    When,
+    // Reason-Verify-Revise loop
+    #[token("reason")]
+    Reason,
+    #[token("verify")]
+    Verify,
+    #[token("revise")]
+    Revise,
+    // Application / policy
+    #[token("application")]
+    Application,
+    #[token("policy")]
+    Policy,
+    #[token("allow")]
+    Allow,
+    #[token("deny")]
+    Deny,
+    // Multimodal
+    #[token("multimodal")]
+    Multimodal,
+    #[token("image")]
+    Image,
+    #[token("audio")]
+    Audio,
+    #[token("video")]
+    Video,
+    // Lifecycle / checkpointing
+    #[token("migrate")]
+    Migrate,
+    #[token("checkpoint")]
+    Checkpoint,
+    #[token("recover")]
+    Recover,
+
     // ---- Primitive type keywords ----
     #[token("int")]
     IntType,
@@ -416,6 +500,124 @@ mod tests {
         assert_eq!(
             toks,
             vec![Token::Network, Token::Cluster, Token::On, Token::Eof]
+        );
+    }
+
+    #[test]
+    fn lexes_v30_goal_system_keywords() {
+        let toks = kinds("goal plan supervisor resource intelligence allocate");
+        assert_eq!(
+            toks,
+            vec![
+                Token::Goal,
+                Token::Plan,
+                Token::Supervisor,
+                Token::Resource,
+                Token::Intelligence,
+                Token::Allocate,
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_v30_agent_os_keywords() {
+        let toks = kinds("autonomous persistent checkpoint recover reason verify revise");
+        assert_eq!(
+            toks,
+            vec![
+                Token::Autonomous,
+                Token::Persistent,
+                Token::Checkpoint,
+                Token::Recover,
+                Token::Reason,
+                Token::Verify,
+                Token::Revise,
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_v30_constraint_keywords() {
+        let toks = kinds("constraint optimize budget");
+        assert_eq!(
+            toks,
+            vec![
+                Token::Constraint,
+                Token::Optimize,
+                Token::Budget,
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_v30_device_keywords() {
+        let toks = kinds("device camera microphone speaker sensor");
+        assert_eq!(
+            toks,
+            vec![
+                Token::Device,
+                Token::Camera,
+                Token::Microphone,
+                Token::Speaker,
+                Token::Sensor,
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_v30_event_and_reason_keywords() {
+        let toks = kinds("event emit when reason verify revise");
+        assert_eq!(
+            toks,
+            vec![
+                Token::Event,
+                Token::Emit,
+                Token::When,
+                Token::Reason,
+                Token::Verify,
+                Token::Revise,
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_v30_application_model_keywords() {
+        let toks = kinds("application policy allow deny ui panel dashboard");
+        assert_eq!(
+            toks,
+            vec![
+                Token::Application,
+                Token::Policy,
+                Token::Allow,
+                Token::Deny,
+                Token::Ui,
+                Token::Panel,
+                Token::Dashboard,
+                Token::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_v30_multimodal_lifecycle_keywords() {
+        let toks = kinds("multimodal image audio video migrate checkpoint recover");
+        assert_eq!(
+            toks,
+            vec![
+                Token::Multimodal,
+                Token::Image,
+                Token::Audio,
+                Token::Video,
+                Token::Migrate,
+                Token::Checkpoint,
+                Token::Recover,
+                Token::Eof,
+            ]
         );
     }
 

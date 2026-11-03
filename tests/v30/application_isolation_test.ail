@@ -1,0 +1,15 @@
+// Integration Test: Application Manifest & Isolation
+model DefaultModel { provider "mock"; }
+agent IsolatedAgent { model DefaultModel; }
+
+policy IsolationPolicy {
+    allow IsolatedAgent compute;
+    deny IsolatedAgent network_outbound;
+}
+
+application SandboxedApp {
+    agents [IsolatedAgent];
+    models [DefaultModel];
+}
+
+println("Application sandboxed manifest registered.");

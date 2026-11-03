@@ -1,0 +1,60 @@
+// AILang v3.0 — Enterprise Knowledge Fabric & Federated Memory
+// Demonstrates: memory fabric, policy, application, goal
+
+model FastModel {
+    provider "mock";
+}
+
+permission knowledge_query;
+permission storage_read;
+
+memory OrgDocs persistent;
+
+agent QueryAgent {
+    model FastModel;
+    memory OrgDocs;
+    permissions [knowledge_query];
+}
+
+agent IngestionAgent {
+    model FastModel;
+    memory OrgDocs;
+    permissions [storage_read];
+}
+
+policy EnterpriseKnowledgePolicy {
+    allow QueryAgent knowledge_query;
+    allow IngestionAgent storage_read;
+    deny QueryAgent storage_read;
+}
+
+application KnowledgeFabricApp {
+    agents [QueryAgent, IngestionAgent];
+    models [FastModel];
+    memory [OrgDocs];
+}
+
+supervisor KnowledgeSupervisor one_for_one {
+    children [QueryAgent, IngestionAgent];
+}
+
+on indexed_document {
+    println("Indexed document confirmation: " + payload);
+}
+
+goal IngestAndQuery "Ingest organizational document and verify semantic retrieval" {
+    let doc_id = "DOC-2026-Q3-STRATEGY";
+    remember("doc_key", doc_id);
+    remember("doc_content", "Enterprise distributed AI agents are operational across edge nodes.");
+
+    println("Ingested: " + recall("doc_key"));
+    println("Content: " + recall("doc_content"));
+
+    reason max 2 iterations {
+        println("Validating semantic vector index coherence...");
+    }
+
+    emit "indexed_document" doc_id;
+}
+
+println("Enterprise Knowledge Fabric operational.");

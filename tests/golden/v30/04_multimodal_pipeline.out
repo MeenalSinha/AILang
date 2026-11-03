@@ -1,0 +1,17 @@
+[device::Mic] kind=microphone permissions=[capture]
+[device::Speaker] kind=speaker permissions=[stream]
+[resource::AudioCompute] kind=compute config=[sample_rate=44100, channels=2]
+[supervisor::AssistantSupervisor] strategy=one_for_one children=[AudioProcessor, SynthesisAgent]
+[goal::VoiceInteraction] objective: Listen, transcribe, reason and speak response
+Multimodal hardware ready: string, string
+[reason] starting RVR loop max_iterations=2
+[reason] iteration 1
+Processing speech input turn...
+[reason] iteration 2
+Processing speech input turn...
+[reason] loop complete
+[emit] event="audio_transcribed" payload=User asked: What is the status of the cluster?
+[SynthesisAgent] Received transcription: User asked: What is the status of the cluster?
+[goal::VoiceInteraction] completed
+Multimodal assistant online.
+Stored query: User asked: What is the status of the cluster?

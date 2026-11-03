@@ -1,0 +1,13 @@
+[package]
+name = "ailang-memory-fabric"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+ailang-ai-runtime = { workspace = true }
+

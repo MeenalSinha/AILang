@@ -1,0 +1,15 @@
+// Integration Test: Supervisor Strategy
+model FastMock { provider "mock"; }
+agent ChildA { model FastMock; }
+agent ChildB { model FastMock; }
+agent ChildC { model FastMock; }
+
+supervisor RestForOneTree rest_for_one {
+    children [ChildA, ChildB, ChildC];
+}
+
+supervisor OneForAllTree one_for_all {
+    children [ChildA, ChildB];
+}
+
+println("Supervisor trees defined successfully.");

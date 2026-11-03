@@ -1,0 +1,22 @@
+[supervisor::TeamSupervisor] strategy=one_for_one children=[PM, Architect, Developer, Tester, SecurityReviewer]
+[policy::EnterprisePolicy] rules=7
+[policy::EnterprisePolicy] allow PM jira
+[policy::EnterprisePolicy] allow PM internet
+[policy::EnterprisePolicy] allow Developer fs_write
+[policy::EnterprisePolicy] allow Developer terminal
+[policy::EnterprisePolicy] deny Developer production_database
+[policy::EnterprisePolicy] allow Tester terminal
+[policy::EnterprisePolicy] deny Tester fs_write
+[application::SoftwareTeamApp] registering
+[application::SoftwareTeamApp] agents=[PM, Architect, Developer, Tester, SecurityReviewer]
+[application::SoftwareTeamApp] models=[ClaudeModel, GeminiModel]
+[goal::BuildFeature] objective: Implement, review and ship a production feature
+[PM] Planning feature: distributed agent checkpointing
+[Architect] Designing architecture for: distributed agent checkpointing
+[Developer] Implementing: distributed agent checkpointing
+[Tester] Running tests for: distributed agent checkpointing
+[SecurityReviewer] Security audit complete.
+[emit] event="feature_shipped" payload=distributed agent checkpointing
+Event received: Feature shipped successfully -> distributed agent checkpointing
+[goal::BuildFeature] completed
+Software team initialized with supervision and policy enforcement.

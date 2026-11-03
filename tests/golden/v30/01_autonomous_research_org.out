@@ -1,0 +1,18 @@
+[resource::IntelligencePool] kind=intelligence config=[token_budget=500000, cost_budget=10.0]
+[supervisor::OrgSupervisor] strategy=one_for_one children=[Coordinator, Researcher, Analyst]
+[goal::DeepResearch] objective: Produce a comprehensive research report on a given topic
+Starting research on: quantum computing applications in drug discovery
+[reason] starting RVR loop max_iterations=3
+[reason] iteration 1
+Reasoning iteration complete
+[reason] iteration 2
+Reasoning iteration complete
+[reason] iteration 3
+Reasoning iteration complete
+[reason] loop complete
+[emit] event="research_complete" payload=quantum computing applications in drug discovery
+Event received! Topic: quantum computing applications in drug discovery
+Memory contains: Research overview: quantum computing applications in drug discovery
+[goal::DeepResearch] completed
+Organization initialized.
+Supervisor: OrgSupervisor

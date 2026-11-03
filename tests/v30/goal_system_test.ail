@@ -1,0 +1,18 @@
+// Integration Test: Goal System & RVR Loop
+model FastMock { provider "mock"; }
+agent GoalWorker { model FastMock; }
+supervisor WorkerSupervisor one_for_one { children [GoalWorker]; }
+
+on goal_verified {
+    println("Verified attempts:", payload);
+    assert(payload == 3, "expected 3 reason iterations");
+}
+
+goal AutonomousTest "Ensure goal completes within constraints" {
+    let attempts = 0;
+    reason max 3 iterations {
+        attempts = attempts + 1;
+        println("Iteration:", attempts);
+    }
+    emit "goal_verified" attempts;
+}

@@ -1,0 +1,15 @@
+// Integration Test: System Doctor Constructs
+resource MemoryPool compute {
+    max_mb 2048;
+}
+
+device CameraSensor camera {
+    permissions ["stream"];
+}
+
+ui ControlCenter {
+    title "Operations Center";
+    panel Telemetry chart;
+}
+
+println("System resources and UI manifests online.");

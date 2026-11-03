@@ -212,6 +212,48 @@ fn walk_stmt(stmt: &Stmt, index: &mut SymbolIndex) {
             index.use_name(&event_name.name, event_name.span);
             walk_block(body, index);
         }
+
+        // v3.0 constructs — indexed so go-to-definition / hover / rename
+        // all work for goals, supervisors, resources, devices, ui, etc.
+        Stmt::Goal { name, body, .. } => {
+            index.declare(&name.name, name.span);
+            walk_block(body, index);
+        }
+        Stmt::Supervisor { name, children, .. } => {
+            index.declare(&name.name, name.span);
+            for child in children {
+                index.use_name(&child.name, child.span);
+            }
+        }
+        Stmt::Resource { name, config, .. } => {
+            index.declare(&name.name, name.span);
+            for (_, v) in config {
+                walk_expr(v, index);
+            }
+        }
+        Stmt::Reason { max_iterations, budget, body, .. } => {
+            if let Some(e) = max_iterations { walk_expr(e, index); }
+            if let Some(e) = budget { walk_expr(e, index); }
+            walk_block(body, index);
+        }
+        Stmt::Device { name, .. } => {
+            index.declare(&name.name, name.span);
+        }
+        Stmt::Ui { name, .. } => {
+            index.declare(&name.name, name.span);
+        }
+        Stmt::Application { name, agents, models, workflows, .. } => {
+            index.declare(&name.name, name.span);
+            for a in agents { index.use_name(&a.name, a.span); }
+            for m in models { index.use_name(&m.name, m.span); }
+            for w in workflows { index.use_name(&w.name, w.span); }
+        }
+        Stmt::Policy { name, .. } => {
+            index.declare(&name.name, name.span);
+        }
+        Stmt::Emit { payload, .. } => {
+            if let Some(e) = payload { walk_expr(e, index); }
+        }
     }
 }
 

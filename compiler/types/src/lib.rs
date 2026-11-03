@@ -479,6 +479,61 @@ impl TypeChecker {
                 self.check_block(body);
                 self.pop_scope();
             }
+
+            // v3.0 constructs — typed as opaque AI OS resources.
+            // Full structural typing of goals, supervisors, resources, etc.
+            // is a planned v3.1 enhancement tracked in docs/roadmap.md.
+            Stmt::Goal { name, body, .. } => {
+                self.define(&name.name, Type::Unknown);
+                self.push_scope();
+                self.check_block(body);
+                self.pop_scope();
+            }
+
+            Stmt::Supervisor { name, .. } => {
+                self.define(&name.name, Type::Unknown);
+            }
+
+            Stmt::Resource { name, config, .. } => {
+                self.define(&name.name, Type::Unknown);
+                for (_, v) in config {
+                    self.check_expr(v);
+                }
+            }
+
+            Stmt::Reason { max_iterations, budget, body, .. } => {
+                if let Some(e) = max_iterations {
+                    self.check_expr(e);
+                }
+                if let Some(e) = budget {
+                    self.check_expr(e);
+                }
+                self.push_scope();
+                self.check_block(body);
+                self.pop_scope();
+            }
+
+            Stmt::Device { name, .. } => {
+                self.define(&name.name, Type::Unknown);
+            }
+
+            Stmt::Ui { name, .. } => {
+                self.define(&name.name, Type::Unknown);
+            }
+
+            Stmt::Application { name, .. } => {
+                self.define(&name.name, Type::Unknown);
+            }
+
+            Stmt::Policy { name, .. } => {
+                self.define(&name.name, Type::Unknown);
+            }
+
+            Stmt::Emit { payload, .. } => {
+                if let Some(e) = payload {
+                    self.check_expr(e);
+                }
+            }
         }
     }
 

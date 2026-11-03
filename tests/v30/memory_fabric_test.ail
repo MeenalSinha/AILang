@@ -1,0 +1,13 @@
+// Integration Test: Memory Fabric Scopes
+memory SessionStore temporary;
+memory PersistentStore persistent;
+
+remember("global_key", "system_value");
+assert(recall("global_key") == "system_value", "exact match failed");
+
+remember("long_entry", "the quick brown fox jumps over the lazy dog");
+assert(recall("brown fox") == "the quick brown fox jumps over the lazy dog", "substring recall failed");
+
+forget("global_key");
+assert(recall("global_key") == null, "forget failed");
+println("Memory fabric verification passed.");

@@ -1,0 +1,56 @@
+// AILang v3.0 — Multimodal Assistant
+// Demonstrates: multimodal hardware, goal, reason, supervisor
+
+model MultimodalModel {
+    provider "local";
+    endpoint "http://localhost:11434";
+}
+
+permission audio_capture;
+permission audio_stream;
+
+device Mic microphone {
+    permissions ["capture"];
+}
+
+device Speaker speaker {
+    permissions ["stream"];
+}
+
+resource AudioCompute compute {
+    sample_rate 44100;
+    channels 2;
+}
+
+agent AudioProcessor {
+    model MultimodalModel;
+    permissions [audio_capture, audio_stream];
+}
+
+agent SynthesisAgent {
+    model MultimodalModel;
+    permissions [audio_stream];
+}
+
+supervisor AssistantSupervisor one_for_one {
+    children [AudioProcessor, SynthesisAgent];
+}
+
+on audio_transcribed {
+    println("[SynthesisAgent] Received transcription: " + payload);
+    remember("last_transcript", payload);
+}
+
+goal VoiceInteraction "Listen, transcribe, reason and speak response" {
+    println("Multimodal hardware ready: " + type(Mic) + ", " + type(Speaker));
+    let sample = "User asked: What is the status of the cluster?";
+    
+    reason max 2 iterations {
+        println("Processing speech input turn...");
+    }
+
+    emit "audio_transcribed" sample;
+}
+
+println("Multimodal assistant online.");
+println("Stored query: " + recall("last_transcript"));

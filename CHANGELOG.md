@@ -1,5 +1,44 @@
 # Changelog
 
+## v3.0 — The AI Operating System (this release)
+
+### Phase 0: Forensic Audit & Stabilization of v2.0
+- Re-verified all v2.0 language and runtime subsystems across 370+ tests.
+- Audited agent communication, clustering, event dispatch, and vector engines.
+- Diagnosed and repaired keyword boundary issues where v3.0 keywords (`persistent`, `emit`, `checkpoint`) collided with v2.0 identifiers.
+- Fixed a mutex self-deadlock in the Health Monitor where `system_doctor_report` recursively called `overall_status` while holding the component lock.
+- Fixed an interpreter scope omission where `Stmt::Emit` failed to define `payload` in handler execution environments.
+
+### Phase 1: Unified Intelligence Kernel (`kernel/` crate)
+- **Agent Process Management (`agent_process.rs`)**: Modeled agents as first-class operating system processes with unique PIDs, PCB tracking, full lifecycle state transitions (Created, Starting, Running, Paused, Crashed, Recovering, Terminated), checkpointing, and token/cost quota enforcement.
+- **Goal Engine (`goal_engine.rs`)**: Declarative objective planning and constraint monitoring (accuracy, budget, deadline, latency, energy).
+- **Supervision Trees (`supervisor.rs`)**: Erlang/OTP-style fault-tolerance engines supporting `OneForOne`, `OneForAll`, and `RestForOne` restart strategies.
+- **Dynamic Model Fabric (`model_fabric.rs`)**: Capability-based model routing with automated failover chains across Primary, Fallback, Emergency, and local mock tiers.
+- **Event Bus (`event_bus.rs`)**: Asynchronous, priority-ordered decoupled messaging with hierarchical topic dispatch and wildcard subscriptions.
+- **System Doctor & Health Monitoring (`health_monitor.rs`)**: Comprehensive component diagnostic scanner with self-healing suggestions and alerts.
+- **Context Manager (`context_manager.rs`)**: Priority-ordered, token-budgeted dynamic prompt construction with TTL eviction.
+- **Resource Manager (`resource_manager.rs`)**: Multi-tenant token, cost, compute, and energy accounting across distributed agents.
+- **Task Graph Planner (`planner.rs`)**: Topological objective decomposition and round-robin agent assignment.
+- **Application Isolation (`isolation.rs`)**: Namespace sandboxing and capability-based policy engine.
+
+### Phase 2: Universal Memory Fabric (`memory_fabric/` crate)
+- 8 memory scoping tiers: `Working`, `Session`, `LongTerm`, `Semantic`, `Episodic`, `Procedural`, `Shared`, `Global`.
+- Pluggable `MemoryBackend` trait architecture with `InMemoryBackend` implementation.
+- Point-in-time state snapshots, vector history versioning, and semantic kNN retrieval.
+
+### Phase 3: Application Model (`application/` crate)
+- First-class `application` declarative manifest: deployment unit grouping agents, models, memory, and workflows.
+- Declarative `policy` access control rules with explicit `allow` and `deny` evaluation.
+- Application lifecycle management and registry.
+
+### Phase 4: Language & Compiler Evolution
+- Added v3.0 AST statements and expressions for goals, supervisors, resources, reason-verify-revise loops, devices, declarative UI, applications, policies, and events.
+- Updated lexer, parser, semantic analyzer, type checker, formatter, and tree-walk interpreter.
+- Zero test regressions; 430+ automated tests passing across the workspace.
+
+### Phase 5: CLI & Tooling Modernization
+- Added subcommands: `ail system doctor`, `ail system status`, `ail agent list`, `ail agent inspect`, `ail model list`, `ail memory inspect`, `ail goal plan`, `ail security check-policy`, `ail profile`, `ail eval`, and `ail migrate`.
+
 ## v2.0 — Distributed Intelligence (this release)
 
 ### Phase 0: v1.0 audit and stabilization

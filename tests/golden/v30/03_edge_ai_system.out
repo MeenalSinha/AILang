@@ -1,0 +1,24 @@
+[device::MainCamera] kind=camera permissions=[read]
+[device::EnvSensor] kind=sensor permissions=[read, calibrate]
+[device::AlertSpeaker] kind=speaker permissions=[write]
+[resource::EdgeCompute] kind=compute config=[max_memory_mb=4096, max_cpu_percent=80]
+[ui::EdgeDashboard] title="Edge AI Control Panel"
+[ui::EdgeDashboard] panel "CameraFeed" kind=generic
+[ui::EdgeDashboard] panel "SensorChart" kind=chart
+[ui::EdgeDashboard] panel "AlertLog" kind=log
+[supervisor::EdgeSupervisor] strategy=one_for_one children=[VisionAgent, SensorAgent]
+[goal::MonitorEnvironment] objective: Continuously monitor and respond to environmental conditions
+[VisionAgent] Camera initialized: string
+[SensorAgent] Sensor initialized: string
+[reason] starting RVR loop max_iterations=2
+[reason] iteration 1
+Sensor reading: temperature=22.5C humidity=45% motion=none
+[reason] iteration 2
+Sensor reading: temperature=22.5C humidity=45% motion=none
+[reason] loop complete
+[emit] event="alert_check" payload=all_systems_nominal
+Alert check: all_systems_nominal
+Last reading: temperature=22.5C humidity=45% motion=none
+[goal::MonitorEnvironment] completed
+Edge AI system online.
+UI Dashboard: string

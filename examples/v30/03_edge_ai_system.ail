@@ -1,0 +1,70 @@
+// AILang v3.0 — Edge AI System
+// Demonstrates: device, ui, resource, goal, reason
+
+model LocalModel {
+    provider "local";
+    endpoint "http://localhost:11434";
+}
+
+permission camera_read;
+permission fs_write;
+permission sensor_read;
+
+device MainCamera camera {
+    permissions ["read"];
+}
+
+device EnvSensor sensor {
+    permissions ["read", "calibrate"];
+}
+
+device AlertSpeaker speaker {
+    permissions ["write"];
+}
+
+resource EdgeCompute compute {
+    max_memory_mb 4096;
+    max_cpu_percent 80;
+}
+
+agent VisionAgent {
+    model LocalModel;
+    permissions [camera_read, fs_write];
+}
+
+agent SensorAgent {
+    model LocalModel;
+    permissions [sensor_read];
+}
+
+ui EdgeDashboard {
+    title "Edge AI Control Panel";
+    panel CameraFeed video;
+    panel SensorChart chart;
+    panel AlertLog log;
+}
+
+supervisor EdgeSupervisor one_for_one {
+    children [VisionAgent, SensorAgent];
+}
+
+on alert_check {
+    println("Alert check: " + payload);
+    println("Last reading: " + recall("last_sensor_reading"));
+}
+
+goal MonitorEnvironment "Continuously monitor and respond to environmental conditions" {
+    println("[VisionAgent] Camera initialized: " + type(MainCamera));
+    println("[SensorAgent] Sensor initialized: " + type(EnvSensor));
+
+    reason max 2 iterations {
+        let reading = "temperature=22.5C humidity=45% motion=none";
+        remember("last_sensor_reading", reading);
+        println("Sensor reading: " + reading);
+    }
+
+    emit "alert_check" "all_systems_nominal";
+}
+
+println("Edge AI system online.");
+println("UI Dashboard: " + type(EdgeDashboard));

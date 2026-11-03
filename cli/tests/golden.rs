@@ -110,6 +110,15 @@ macro_rules! golden_test_v20 {
     };
 }
 
+macro_rules! golden_test_v30 {
+    ($fn_name:ident, $example:expr) => {
+        #[test]
+        fn $fn_name() {
+            check_golden_in($example, "examples/v30", "tests/golden/v30");
+        }
+    };
+}
+
 golden_test!(golden_hello_world, "01_hello_world");
 golden_test!(golden_calculator, "02_calculator");
 golden_test!(golden_loops, "03_loops");
@@ -169,4 +178,25 @@ golden_test_v20!(
 golden_test_v20!(
     golden_v20_context_and_vector_engine,
     "04_context_and_vector_engine"
+);
+
+golden_test_v30!(
+    golden_v30_autonomous_research_org,
+    "01_autonomous_research_org"
+);
+golden_test_v30!(
+    golden_v30_ai_software_team,
+    "02_ai_software_team"
+);
+golden_test_v30!(
+    golden_v30_edge_ai_system,
+    "03_edge_ai_system"
+);
+golden_test_v30!(
+    golden_v30_multimodal_pipeline,
+    "04_multimodal_pipeline"
+);
+golden_test_v30!(
+    golden_v30_enterprise_knowledge_rag,
+    "05_enterprise_knowledge_rag"
 );

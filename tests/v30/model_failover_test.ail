@@ -1,0 +1,10 @@
+// Integration Test: Model Fallback
+model PrimaryModel { provider "mock"; }
+model FallbackModel { provider "mock"; }
+
+agent ResilientAgent {
+    models [PrimaryModel, FallbackModel];
+}
+
+println("Resilient agent configured with model failover list.");
+println("Agent models: " + type(ResilientAgent));

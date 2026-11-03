@@ -79,6 +79,12 @@ enum Flow {
     Continue,
 }
 
+impl Flow {
+    fn is_normal(&self) -> bool {
+        matches!(self, Flow::Normal)
+    }
+}
+
 type ExecResult = Result<Flow, RuntimeError>;
 type EvalResult = Result<Value, RuntimeError>;
 
@@ -648,6 +654,337 @@ impl<W: Write> Interpreter<W> {
                     .entry(event_name.name.clone())
                     .or_default()
                     .push(Rc::new(body.clone()));
+                Ok(Flow::Normal)
+            }
+
+            // ---------------------------------------------------------------
+            // v3.0 AI Operating System constructs
+            // ---------------------------------------------------------------
+
+            Stmt::Goal {
+                name,
+                objective,
+                constraints,
+                body,
+                ..
+            } => {
+                // Print the goal declaration with its constraints, then
+                // execute the body inside the goal scope.
+                writeln!(self.out, "[goal::{}] objective: {}", name.name, objective).ok();
+                for c in constraints {
+                    writeln!(
+                        self.out,
+                        "[goal::{}] constraint {:?} {:?} {:?}",
+                        name.name, c.kind, c.op, c.value
+                    )
+                    .ok();
+                }
+                let goal_env = Environment::child(env);
+                let result = self.exec_block(body, &goal_env)?;
+                writeln!(self.out, "[goal::{}] completed", name.name).ok();
+                Ok(result)
+            }
+
+            Stmt::Supervisor {
+                name,
+                strategy,
+                children,
+                ..
+            } => {
+                // Register the supervision tree. Records the supervisor
+                // manifest in the environment. Actual restart logic fires
+                // when a child agent fails (see the Agent arm's error handling).
+                let strategy_str = match strategy {
+                    SupervisionStrategy::OneForOne => "one_for_one",
+                    SupervisionStrategy::OneForAll => "one_for_all",
+                    SupervisionStrategy::RestForOne => "rest_for_one",
+                };
+                let children_str = children
+                    .iter()
+                    .map(|c| c.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                writeln!(
+                    self.out,
+                    "[supervisor::{}] strategy={} children=[{}]",
+                    name.name, strategy_str, children_str
+                )
+                .ok();
+                env.define(
+                    &format!("__supervisor_{}", name.name),
+                    Value::string(format!(
+                        "supervisor:{}:{}:[{}]",
+                        name.name, strategy_str, children_str
+                    )),
+                    true,
+                );
+                Ok(Flow::Normal)
+            }
+
+            Stmt::Resource {
+                name, kind, config, ..
+            } => {
+                // Evaluate all configuration values and store the resource
+                // descriptor in the environment.
+                let mut pairs = Vec::new();
+                for (k, v) in config {
+                    let val = self.eval_expr(v, env)?;
+                    pairs.push(format!("{}={}", k, val));
+                }
+                let kind_str = format!("{:?}", kind).to_lowercase();
+                let descriptor =
+                    format!("resource:{}:{}:{}", name.name, kind_str, pairs.join(";"));
+                writeln!(
+                    self.out,
+                    "[resource::{}] kind={} config=[{}]",
+                    name.name,
+                    kind_str,
+                    pairs.join(", ")
+                )
+                .ok();
+                env.define(&name.name, Value::string(descriptor), true);
+                Ok(Flow::Normal)
+            }
+
+            Stmt::Reason {
+                max_iterations,
+                budget,
+                body,
+                ..
+            } => {
+                // Reason-Verify-Revise loop. Executes `body` up to
+                // `max_iterations` times (default: 1 in this foundation
+                // release). Future releases wire this to a real LLM's
+                // chain-of-thought; for now the loop structure and budget
+                // tracking are the verifiable foundation.
+                let max = if let Some(expr) = max_iterations {
+                    match self.eval_expr(expr, env)? {
+                        Value::Int(n) => n.max(1) as usize,
+                        _ => 1,
+                    }
+                } else {
+                    1
+                };
+                // Budget is parsed but not yet metered in this foundation
+                // release — recorded for honest documentation.
+                let _budget_val = if let Some(expr) = budget {
+                    Some(self.eval_expr(expr, env)?)
+                } else {
+                    None
+                };
+                writeln!(
+                    self.out,
+                    "[reason] starting RVR loop max_iterations={}",
+                    max
+                )
+                .ok();
+                let mut last = Flow::Normal;
+                for i in 0..max {
+                    writeln!(self.out, "[reason] iteration {}", i + 1).ok();
+                    let child_env = Environment::child(env);
+                    last = self.exec_block(body, &child_env)?;
+                    if !last.is_normal() {
+                        break;
+                    }
+                }
+                writeln!(self.out, "[reason] loop complete").ok();
+                Ok(last)
+            }
+
+            Stmt::Device {
+                name,
+                kind,
+                permissions,
+                ..
+            } => {
+                // Declare a hardware device. Stores the device descriptor in
+                // the environment. Actual hardware access is OS-mediated;
+                // in this foundation release the interpreter records the
+                // manifest and prints the access grant.
+                let kind_str = format!("{:?}", kind).to_lowercase();
+                let perms = permissions.join(", ");
+                writeln!(
+                    self.out,
+                    "[device::{}] kind={} permissions=[{}]",
+                    name.name, kind_str, perms
+                )
+                .ok();
+                env.define(
+                    &name.name,
+                    Value::string(format!("device:{}:{}", kind_str, name.name)),
+                    true,
+                );
+                Ok(Flow::Normal)
+            }
+
+            Stmt::Ui {
+                name, title, panels, ..
+            } => {
+                // Declare a UI surface. In this foundation release the
+                // interpreter prints the declarative manifest. A future UI
+                // runtime renders it to a real surface (web / native / TUI).
+                let title_str = title.as_deref().unwrap_or(name.name.as_str());
+                writeln!(self.out, "[ui::{}] title=\"{}\"", name.name, title_str).ok();
+                for panel in panels {
+                    writeln!(
+                        self.out,
+                        "[ui::{}] panel \"{}\" kind={}",
+                        name.name, panel.name.name, panel.kind
+                    )
+                    .ok();
+                }
+                env.define(&name.name, Value::string(format!("ui:{}", name.name)), true);
+                Ok(Flow::Normal)
+            }
+
+            Stmt::Application {
+                name,
+                agents,
+                models,
+                knowledge,
+                memory,
+                workflows,
+                policies,
+                ..
+            } => {
+                // Top-level application manifest — the unit of deployment.
+                // Prints the descriptor; a future deployment runtime routes
+                // this to Kubernetes / edge / serverless dispatch.
+                writeln!(self.out, "[application::{}] registering", name.name).ok();
+                let agent_list = agents
+                    .iter()
+                    .map(|a| a.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let model_list = models
+                    .iter()
+                    .map(|m| m.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let wf_list = workflows
+                    .iter()
+                    .map(|w| w.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let km_list = knowledge
+                    .iter()
+                    .chain(memory.iter())
+                    .map(|k| k.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                if !agent_list.is_empty() {
+                    writeln!(
+                        self.out,
+                        "[application::{}] agents=[{}]",
+                        name.name, agent_list
+                    )
+                    .ok();
+                }
+                if !model_list.is_empty() {
+                    writeln!(
+                        self.out,
+                        "[application::{}] models=[{}]",
+                        name.name, model_list
+                    )
+                    .ok();
+                }
+                if !wf_list.is_empty() {
+                    writeln!(
+                        self.out,
+                        "[application::{}] workflows=[{}]",
+                        name.name, wf_list
+                    )
+                    .ok();
+                }
+                if !km_list.is_empty() {
+                    writeln!(
+                        self.out,
+                        "[application::{}] knowledge+memory=[{}]",
+                        name.name, km_list
+                    )
+                    .ok();
+                }
+                for rule in policies {
+                    let action = match rule.action {
+                        PolicyAction::Allow => "allow",
+                        PolicyAction::Deny => "deny",
+                    };
+                    writeln!(
+                        self.out,
+                        "[application::{}] policy: {} {} {}",
+                        name.name, action, rule.subject, rule.resource
+                    )
+                    .ok();
+                }
+                env.define(
+                    &name.name,
+                    Value::string(format!("application:{}", name.name)),
+                    true,
+                );
+                Ok(Flow::Normal)
+            }
+
+            Stmt::Policy { name, rules, .. } => {
+                writeln!(
+                    self.out,
+                    "[policy::{}] rules={}",
+                    name.name,
+                    rules.len()
+                )
+                .ok();
+                for rule in rules {
+                    let action = match rule.action {
+                        PolicyAction::Allow => "allow",
+                        PolicyAction::Deny => "deny",
+                    };
+                    writeln!(
+                        self.out,
+                        "[policy::{}] {} {} {}",
+                        name.name, action, rule.subject, rule.resource
+                    )
+                    .ok();
+                }
+                env.define(
+                    &name.name,
+                    Value::string(format!("policy:{}", name.name)),
+                    true,
+                );
+                Ok(Flow::Normal)
+            }
+
+            Stmt::Emit { event, payload, .. } => {
+                let payload_val = if let Some(expr) = payload {
+                    self.eval_expr(expr, env)?
+                } else {
+                    Value::Null
+                };
+                let payload_str = format!("{}", payload_val);
+                // Fire all registered handlers for this event.
+                let handlers: Vec<Rc<Block>> = self
+                    .event_handlers
+                    .borrow()
+                    .get(event.as_str())
+                    .cloned()
+                    .unwrap_or_default();
+                if handlers.is_empty() {
+                    writeln!(
+                        self.out,
+                        "[emit] event=\"{}\" payload={} (no handlers registered)",
+                        event, payload_str
+                    )
+                    .ok();
+                }
+                for handler in handlers {
+                    writeln!(
+                        self.out,
+                        "[emit] event=\"{}\" payload={}",
+                        event, payload_str
+                    )
+                    .ok();
+                    let handler_env = Environment::child(env);
+                    handler_env.define("payload", payload_val.clone(), true);
+                    self.exec_block(&handler, &handler_env)?;
+                }
                 Ok(Flow::Normal)
             }
         }

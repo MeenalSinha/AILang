@@ -423,6 +423,147 @@ fn write_stmt(out: &mut String, stmt: &Stmt, level: usize) {
             indent(out, level);
             out.push_str("}\n");
         }
+
+        // v3.0 constructs — formatted as declarative manifests
+        Stmt::Goal { name, objective, constraints, body, .. } => {
+            out.push_str(&format!("goal {} \"{}\" {{\n", name.name, objective));
+            if !constraints.is_empty() {
+                indent(out, level + 1);
+                out.push_str("constraints {\n");
+                for c in constraints {
+                    indent(out, level + 2);
+                    out.push_str(&format!("{:?} {:?} {:?};\n", c.kind, c.op, c.value));
+                }
+                indent(out, level + 1);
+                out.push_str("}\n");
+            }
+            write_block_body(out, body, level + 1);
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Supervisor { name, strategy, children, .. } => {
+            let s = match strategy {
+                SupervisionStrategy::OneForOne => "one_for_one",
+                SupervisionStrategy::OneForAll => "one_for_all",
+                SupervisionStrategy::RestForOne => "rest_for_one",
+            };
+            out.push_str(&format!("supervisor {} {} {{\n", name.name, s));
+            if !children.is_empty() {
+                indent(out, level + 1);
+                out.push_str("children [");
+                write_ident_list(out, children);
+                out.push_str("];\n");
+            }
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Resource { name, kind, config, .. } => {
+            out.push_str(&format!("resource {} {:?} {{\n", name.name, kind));
+            for (k, v) in config {
+                indent(out, level + 1);
+                out.push_str(&format!("{} ", k));
+                write_expr(out, v);
+                out.push_str(";\n");
+            }
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Reason { max_iterations, budget, body, .. } => {
+            out.push_str("reason");
+            if let Some(max) = max_iterations {
+                out.push_str(" max ");
+                write_expr(out, max);
+                out.push_str(" iterations");
+            }
+            if let Some(b) = budget {
+                out.push_str(" budget ");
+                write_expr(out, b);
+            }
+            out.push_str(" {\n");
+            write_block_body(out, body, level + 1);
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Device { name, kind, permissions, .. } => {
+            out.push_str(&format!("device {} {:?} {{\n", name.name, kind));
+            if !permissions.is_empty() {
+                indent(out, level + 1);
+                out.push_str(&format!("permissions [{}];\n", permissions.join(", ")));
+            }
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Ui { name, title, panels, .. } => {
+            out.push_str(&format!("ui {} {{\n", name.name));
+            if let Some(t) = title {
+                indent(out, level + 1);
+                out.push_str(&format!("title \"{}\";\n", t));
+            }
+            for panel in panels {
+                indent(out, level + 1);
+                out.push_str(&format!("panel {} {};\n", panel.name.name, panel.kind));
+            }
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Application { name, agents, models, knowledge, memory, workflows, policies, .. } => {
+            out.push_str(&format!("application {} {{\n", name.name));
+            if !agents.is_empty() {
+                indent(out, level + 1);
+                out.push_str("agents [");
+                write_ident_list(out, agents);
+                out.push_str("];\n");
+            }
+            if !models.is_empty() {
+                indent(out, level + 1);
+                out.push_str("models [");
+                write_ident_list(out, models);
+                out.push_str("];\n");
+            }
+            for km in knowledge.iter().chain(memory.iter()) {
+                indent(out, level + 1);
+                out.push_str(&format!("knowledge {};\n", km.name));
+            }
+            if !workflows.is_empty() {
+                indent(out, level + 1);
+                out.push_str("workflows [");
+                write_ident_list(out, workflows);
+                out.push_str("];\n");
+            }
+            for rule in policies {
+                indent(out, level + 1);
+                let action = match rule.action { PolicyAction::Allow => "allow", PolicyAction::Deny => "deny" };
+                out.push_str(&format!("{} {} {};\n", action, rule.subject, rule.resource));
+            }
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Policy { name, rules, .. } => {
+            out.push_str(&format!("policy {} {{\n", name.name));
+            for rule in rules {
+                indent(out, level + 1);
+                let action = match rule.action { PolicyAction::Allow => "allow", PolicyAction::Deny => "deny" };
+                out.push_str(&format!("{} {} {};\n", action, rule.subject, rule.resource));
+            }
+            indent(out, level);
+            out.push_str("}\n");
+        }
+
+        Stmt::Emit { event, payload, .. } => {
+            out.push_str(&format!("emit \"{}\"", event));
+            if let Some(p) = payload {
+                out.push(' ');
+                write_expr(out, p);
+            }
+            out.push_str(";\n");
+        }
     }
 }
 

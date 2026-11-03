@@ -17,14 +17,18 @@ members = [
     "language_server",
     "benches",
     "ai_runtime",
+    # v3.0: Intelligence Kernel and new crates
+    "kernel",
+    "memory_fabric",
+    "application",
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "3.0.0"
 edition = "2021"
 authors = ["AILang Team"]
 license = "MIT"
-repository = "https://github.com/ailang-dev/ailang"
+repository = "https://github.com/MeenalSinha/AILang"
 
 [workspace.dependencies]
 ailang-diagnostics = { path = "compiler/diagnostics" }
@@ -39,6 +43,10 @@ ailang-optimizer = { path = "compiler/optimizer" }
 ailang-ai-runtime = { path = "ai_runtime" }
 ailang-fmt = { path = "formatter" }
 ailang-pm = { path = "package_manager" }
+# v3.0 crates
+ailang-kernel = { path = "kernel" }
+ailang-memory-fabric = { path = "memory_fabric" }
+ailang-application = { path = "application" }
 
 logos = "0.14"
 thiserror = "1.0"

@@ -1,0 +1,11 @@
+// Integration Test: Event System
+let received = false;
+
+on telemetry_event {
+    println("Event handled with payload: " + payload);
+    assert(payload == "42", "payload mismatch");
+    received = true;
+}
+
+emit "telemetry_event" "42";
+println("Event system test completed.");
