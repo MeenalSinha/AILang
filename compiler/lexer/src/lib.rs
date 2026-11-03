@@ -12,7 +12,7 @@ use logos::Logos;
 use serde::{Deserialize, Serialize};
 
 #[derive(Logos, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[logos(skip r"[ \t\r\n\f]+")]
+#[logos(skip r"[ \t\r\n\f\u{feff}]+")]
 #[logos(skip r"//[^\n]*")]
 #[logos(skip r"/\*([^*]|\*[^/])*\*/")]
 pub enum Token {
