@@ -9,3 +9,4 @@ on telemetry_event {
 
 emit "telemetry_event" "42";
 println("Event system test completed.");
+

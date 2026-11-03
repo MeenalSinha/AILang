@@ -54,3 +54,4 @@ goal VoiceInteraction "Listen, transcribe, reason and speak response" {
 
 println("Multimodal assistant online.");
 println("Stored query: " + recall("last_transcript"));
+

@@ -333,8 +333,8 @@ mod tests {
         assert!(index.declarations.contains_key("GPT5"));
         assert!(index.declarations.contains_key("Search"));
         assert!(index.declarations.contains_key("A"));
-        assert!(index.usages.get("GPT5").is_some());
-        assert!(index.usages.get("Search").is_some());
+        assert!(index.usages.contains_key("GPT5"));
+        assert!(index.usages.contains_key("Search"));
     }
 
     #[test]

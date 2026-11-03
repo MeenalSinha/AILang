@@ -13,3 +13,4 @@ policy StrictRules {
 }
 
 println("Security policy compiled and validated.");
+

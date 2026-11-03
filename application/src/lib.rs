@@ -44,6 +44,7 @@ impl AppLifecycle {
         matches!(self, AppLifecycle::Running | AppLifecycle::Paused)
     }
 
+    #[allow(clippy::match_like_matches_macro)]
     pub fn can_transition_to(&self, next: &AppLifecycle) -> bool {
         use AppLifecycle::*;
         match (self, next) {

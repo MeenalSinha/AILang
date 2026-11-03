@@ -29,3 +29,4 @@ Supported Device Kinds:
 
 In the v3.0 foundation, device declarations establish permission boundaries and capability descriptors in the runtime environment.
 Hardware drivers interface via the Kernel Device Runtime, isolating untrusted agent code from raw OS system calls.
+

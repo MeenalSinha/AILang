@@ -53,3 +53,4 @@ The Goal Engine (`kernel/src/goal_engine.rs`) manages:
 - **Goal Decomposition**: Breaks high-level objectives into a directed acyclic task graph.
 - **Constraint Monitoring**: Evaluates resource consumption at each stage.
 - **Plan Adjustment**: Recalibrates subtasks if intermediate results do not meet quality thresholds.
+

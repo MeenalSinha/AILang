@@ -544,6 +544,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::approx_constant)]
     fn parse_int_and_float() {
         let mut out = Vec::new();
         assert_eq!(

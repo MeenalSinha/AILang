@@ -34,3 +34,4 @@ All tool executions are validated before invocation:
 - Arguments are sanitized.
 - Permissions are checked against granted agent capabilities and active policy rules.
 - The outcome is immutably recorded in the `AuditLog` with timestamps, caller identity, capability requested, and decision status.
+

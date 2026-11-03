@@ -20,3 +20,4 @@ Panels declare viewports that bind to streams, variables, or event channels:
 - `chart`: Timeseries telemetry (token rate, agent cost, memory capacity).
 - `log`: Streaming audit log or reasoning traces.
 - `chat`: Direct interactive terminal with an agent.
+

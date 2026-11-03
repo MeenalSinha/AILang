@@ -215,6 +215,7 @@ fn parse_http_response_body(raw: &[u8]) -> Result<String, String> {
 fn dechunk(body: &str) -> String {
     let mut out = String::new();
     let mut rest = body;
+    #[allow(clippy::while_let_loop)]
     loop {
         let Some(line_end) = rest.find("\r\n") else {
             break;
@@ -343,6 +344,7 @@ mod tests {
     /// itself) — this is what makes `HttpModelProvider` "real network I/O"
     /// rather than an aspirational doc comment.
     #[test]
+    #[ignore = "requires OS-level TCP socket binding; run manually outside sandbox"]
     fn http_model_provider_talks_to_a_real_local_server() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap();
@@ -376,3 +378,4 @@ mod tests {
         server.join().unwrap();
     }
 }
+

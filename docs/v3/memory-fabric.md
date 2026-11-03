@@ -34,3 +34,4 @@ pub trait MemoryBackend: Send + Sync {
 - Every mutation increments a sequential vector clock.
 - Snapshots record immutable points-in-time for checkpointing agent processes.
 - Semantic recall leverages cosine similarity over embedded representations with recency weighting.
+

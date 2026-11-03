@@ -59,3 +59,4 @@ supervisor TeamSupervisor one_for_one {
 | Process Scheduling | Priority-ordered in-memory queue | Preemptive CFS scheduler across threads/nodes |
 | Memory Isolation | Thread-safe `Arc<Mutex>` per process | Hardware-enforced WASM/microVM memory isolation |
 | Checkpointing | Serialized state snapshot to MemoryFabric | Copy-on-write page streaming to distributed storage |
+

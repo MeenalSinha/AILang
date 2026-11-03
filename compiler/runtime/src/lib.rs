@@ -532,7 +532,8 @@ mod tests {
     #[test]
     fn const_reassignment_errors() {
         let env = Environment::new();
-        env.define("PI", Value::Float(3.14), true);
+        #[allow(clippy::approx_constant)]
+        env.define("PI", Value::Float(3.14), true); // intentional approx for const-reassignment test
         let err = env.assign("PI", Value::Float(3.0)).unwrap_err();
         assert_eq!(err, AssignError::ConstReassignment);
     }

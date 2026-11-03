@@ -13,3 +13,4 @@ application SandboxedApp {
 }
 
 println("Application sandboxed manifest registered.");
+

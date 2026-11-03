@@ -11,3 +11,4 @@ assert(recall("brown fox") == "the quick brown fox jumps over the lazy dog", "su
 forget("global_key");
 assert(recall("global_key") == null, "forget failed");
 println("Memory fabric verification passed.");
+

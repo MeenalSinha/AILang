@@ -3,6 +3,7 @@
 //! A hand-written recursive-descent parser that turns a [`Token`] stream
 //! into an [`ailang_ast::Program`].
 //!
+#![allow(clippy::needless_late_init, clippy::collapsible_if)]
 //! ## Why hand-written recursive descent instead of `chumsky`/`lalrpop`?
 //!
 //! Both are excellent and remain the intended long-term direction (see

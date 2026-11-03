@@ -26,3 +26,4 @@ In the Kernel Event Bus (`kernel/src/event_bus.rs`):
 - Topics support hierarchy separated by dots: `sensor.temperature.update`.
 - Wildcard subscriptions: `sensor.*` or `*`.
 - Priority-ordered event queues ensure safety-critical alerts preempt standard telemetry.
+
