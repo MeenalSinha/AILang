@@ -74,3 +74,4 @@ For future versions, the following enhancements are identified to further boost 
 1. **Bytecode Virtual Machine (BVM):** Transitioning from AST tree-walking to a register-based bytecode VM will reduce loop execution latency by 10x–20x.
 2. **Lockless Event Channels:** Replacing `std::sync::Mutex` in the Event Bus with crossbeam lock-free ring buffers for high-volume streaming telemetry.
 3. **Persistent Vector Index Quantization:** Integrating HNSW or Product Quantization (PQ) for large-scale embedding indexes exceeding 100,000 vectors.
+

@@ -87,3 +87,4 @@ All CLI subcommands documented in user manuals were executed to verify matching 
 
 **VERDICT: 100% ACCURATE AND UP-TO-DATE.**  
 The documentation reflects the true implementation state of the codebase, without phantom features or unstated breaking changes.
+

@@ -108,3 +108,4 @@ Only 1 test out of 495 is marked `#[ignore]`:
 - **Compiler Status:** `cargo check --workspace` completes cleanly.
 - **Clippy Analysis:** `cargo clippy --workspace --all-targets` exits with code `0`. All intentional test approximations and complex matches are annotated with scoped, documented `#[allow]` attributes.
 - **Diagnostics:** 0 compilation errors, 0 clippy errors.
+
